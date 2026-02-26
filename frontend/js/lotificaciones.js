@@ -2,9 +2,12 @@ const API_LOTIFICACIONES = 'http://localhost:3000/api/lotificaciones';
 let lotificacionesCache = [];
 let lotificacionActual = null;
 let poligonoActual = null;
+let resumenFiltroTimer = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   cargarLotificaciones();
+  cargarResumenLotificaciones();
+  configurarFiltrosResumen();
 
   const form = document.getElementById('formLotificacion');
   if (form) {
@@ -46,6 +49,7 @@ async function guardarLotificacion() {
     modal.hide();
 
     cargarLotificaciones();
+    cargarResumenLotificaciones();
   } catch (error) {
     console.error(error);
     mostrarMensajeLotificacion('Error al guardar lotificación', 'danger');
@@ -83,6 +87,89 @@ async function cargarLotificaciones() {
   } catch (error) {
     console.error('Error cargando lotificaciones:', error);
   }
+}
+function configurarFiltrosResumen() {
+  const selectEstado = document.getElementById('filtroEstadoResumen');
+  const inputTexto = document.getElementById('filtroTextoResumen');
+  const btnLimpiar = document.getElementById('btnLimpiarFiltrosResumen');
+
+  if (selectEstado) {
+    selectEstado.addEventListener('change', () => {
+      cargarResumenLotificaciones();
+    });
+  }
+
+  if (inputTexto) {
+    inputTexto.addEventListener('input', () => {
+      if (resumenFiltroTimer) clearTimeout(resumenFiltroTimer);
+      resumenFiltroTimer = setTimeout(() => {
+        cargarResumenLotificaciones();
+      }, 280);
+    });
+  }
+
+  if (btnLimpiar) {
+    btnLimpiar.addEventListener('click', () => {
+      if (selectEstado) selectEstado.value = 'todos';
+      if (inputTexto) inputTexto.value = '';
+      cargarResumenLotificaciones();
+    });
+  }
+}
+async function cargarResumenLotificaciones() {
+  const tbody = document.getElementById('tablaResumenLotificaciones');
+  if (!tbody) return;
+
+  const estado = document.getElementById('filtroEstadoResumen')?.value || 'todos';
+  const q = document.getElementById('filtroTextoResumen')?.value?.trim() || '';
+
+  const params = new URLSearchParams();
+  if (estado) params.set('estado', estado);
+  if (q) params.set('q', q);
+
+  try {
+    const res = await fetch(`${API_LOTIFICACIONES}/resumen?${params.toString()}`);
+    if (!res.ok) throw new Error('No se pudo cargar resumen');
+
+    const data = await res.json();
+    renderResumenLotificaciones(Array.isArray(data) ? data : []);
+  } catch (error) {
+    console.error('Error cargando resumen de lotificaciones:', error);
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center text-danger">
+          Error al cargar resumen
+        </td>
+      </tr>
+    `;
+  }
+}
+function renderResumenLotificaciones(rows) {
+  const tbody = document.getElementById('tablaResumenLotificaciones');
+  if (!tbody) return;
+
+  if (!rows.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center text-muted">
+          Sin resultados para los filtros aplicados
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(row => `
+    <tr>
+      <td class="fw-semibold">${row.nombre || ''}</td>
+      <td>${row.ubicacion || ''}</td>
+      <td><span class="badge bg-secondary">${Number(row.total_lotes || 0)}</span></td>
+      <td><span class="badge bg-success">${Number(row.lotes_disponibles || 0)}</span></td>
+      <td><span class="badge bg-warning text-dark">${Number(row.lotes_promesa_venta || 0)}</span></td>
+      <td><span class="badge bg-danger">${Number(row.lotes_vendidos || 0)}</span></td>
+      <td><span class="badge bg-info text-dark">${Number(row.lotes_reservados || 0)}</span></td>
+    </tr>
+  `).join('');
 }
 function renderPoligonos(poligonos) {
   const cont = document.getElementById('accordionPoligonos');
@@ -264,6 +351,7 @@ document.getElementById('formLote').addEventListener('submit', async e => {
   bootstrap.Modal.getInstance(document.getElementById('modalLote')).hide();
 
   cargarLotes(poligonoActual);
+  cargarResumenLotificaciones();
 });
 async function cargarLotes(idPoligono) {
   const res = await fetch(`http://localhost:3000/api/lotes/poligono/${idPoligono}`);

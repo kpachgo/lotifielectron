@@ -24,3 +24,152 @@
 }
 
 
+
+/* Lotificaciones */
+:root {
+  --lot-bg: #f5f7fc;
+  --lot-card: #ffffff;
+  --lot-border: #dfe7f3;
+  --lot-text: #0f172a;
+  --lot-muted: #64748b;
+  --lot-primary: #0a4ecb;
+  --lot-primary-soft: #eaf1ff;
+  --lot-shadow: 0 14px 30px rgba(15, 23, 42, 0.09);
+}
+
+body {
+  background: radial-gradient(circle at 15% 8%, #eaf2ff 0, var(--lot-bg) 42%);
+  color: var(--lot-text);
+}
+
+.lot-shell {
+  width: min(100%, 1600px);
+  animation: lotIn 280ms ease-out;
+}
+
+.lot-message-shell {
+  width: min(100%, 1600px);
+}
+
+.lot-hero {
+  border: 1px solid var(--lot-border);
+  border-radius: 16px;
+  background: linear-gradient(140deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: var(--lot-shadow);
+  padding: 1rem 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.lot-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.lot-subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--lot-muted);
+  font-size: 0.95rem;
+}
+
+.lot-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
+}
+
+.lot-chip {
+  background: var(--lot-primary-soft);
+  color: var(--lot-primary);
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.83rem;
+  font-weight: 600;
+  border: 1px solid #d4e2ff;
+}
+
+.lot-btn-primary {
+  border-radius: 10px;
+  font-weight: 600;
+  padding-inline: 1rem;
+  background: var(--lot-primary);
+  border-color: var(--lot-primary);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.lot-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(10, 78, 203, 0.25);
+}
+
+.lot-card {
+  border: 1px solid var(--lot-border);
+  border-radius: 16px;
+  box-shadow: var(--lot-shadow);
+  background: var(--lot-card);
+  overflow: hidden;
+}
+
+.lot-table-wrap {
+  max-height: 470px;
+  overflow: auto;
+}
+
+.lot-table-wrap .table {
+  margin-bottom: 0;
+}
+
+.lot-table-wrap .table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.table tbody tr td {
+  vertical-align: middle;
+}
+
+.table tbody tr:hover td {
+  background-color: #f7fbff;
+}
+
+.accordion-item {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 0.55rem;
+}
+
+.accordion-button {
+  font-weight: 600;
+  background: #f8fafc;
+}
+
+.modal-content {
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+}
+
+.form-control,
+.form-select,
+textarea.form-control {
+  border-radius: 10px;
+  border-color: #d8deea;
+  transition: all 160ms ease;
+}
+
+.form-control:focus,
+.form-select:focus,
+textarea.form-control:focus {
+  border-color: var(--lot-primary);
+  box-shadow: 0 0 0 0.2rem rgba(10, 78, 203, 0.14);
+}
+
+@keyframes lotIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
