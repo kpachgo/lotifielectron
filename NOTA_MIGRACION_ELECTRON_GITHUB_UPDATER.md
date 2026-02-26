@@ -87,17 +87,27 @@ No marcar como pre-release para uso productivo.
 
 ## 9) Flujo de versiones recomendado
 1. Cambiar `version` en `package.json` (ej. `1.0.2`)
-2. Build: `npm run dist:win`
-3. Crear Release tag `v1.0.2`
-4. Subir assets (`.exe`, `latest.yml`, `.blockmap`)
-5. Publicar release
-6. Probar update desde version anterior instalada
+2. Commit y push de `package.json` a `main`
+3. Build: `npm run dist:win`
+4. Crear Release tag `v1.0.2` (target `main`)
+5. Subir assets (`.exe`, `latest.yml`, `.blockmap`)
+6. Publicar release
+7. Probar update desde version anterior instalada
+
+## 9.1) Opciones de GitHub Release para updater
+- `Set as a pre-release`: NO
+- `Set as the latest release`: SI
+- Tag con prefijo `v` (ej. `v1.0.2`) y coherente con `package.json` (`1.0.2`)
 
 ## 10) Instalacion para usuarios finales
 Usuario final solo necesita:
 - descargar y ejecutar `LotifiElectron-Setup-x.y.z.exe`
 
 `latest.yml` y `.blockmap` son para el updater.
+
+## 10.1) Nota importante de publicacion
+- `package.json` NO se adjunta en Release.
+- `package.json` se publica por commit normal en el repo (`main`).
 
 ## 11) Notas de seguridad
 - Se versiono `.env` por decision operativa (repo privado).
@@ -112,3 +122,12 @@ Usuario final solo necesita:
 - [ ] Separar remoto nuevo de proyecto legado
 - [ ] Publicar release con assets de updater
 - [ ] Validar instalacion limpia + auto-update
+
+## 13) Errores operativos reales encontrados y solucion
+- Ejecutar `git add package.json` desde `backend/` no agrega el archivo de raiz.
+  - Solucion: moverse a raiz (`cd ..`) o usar `git add ../package.json`.
+- En VS Code, el cuadro de commit recibe solo mensaje, no comando completo.
+  - Incorrecto: `git commit -m "..."` dentro del cuadro.
+  - Correcto: solo texto del mensaje, luego `Confirmacion`.
+- Si el push sigue rechazado aunque `release*/` este en `.gitignore`, el problema es historial previo con binarios grandes.
+  - Solucion: limpiar historial local afectado y volver a empujar una rama limpia.

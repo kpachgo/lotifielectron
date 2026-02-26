@@ -1,0 +1,91 @@
+GUIA RAPIDA - ACTUALIZACIONES Y RELEASES (LOTIFIELECTRON)
+
+OBJETIVO
+- Publicar nuevas versiones para que Electron auto-update detecte e instale updates.
+
+REQUISITOS
+- Repo en GitHub: kpachgo/lotifielectron
+- package.json con:
+  - build.publish.provider = github
+  - build.publish.owner = kpachgo
+  - build.publish.repo = lotifielectron
+- Tener instalado Node/NPM.
+
+FLUJO COMPLETO (CADA NUEVA VERSION)
+
+1) SUBIR VERSION EN package.json
+- Cambiar "version" (ejemplo: 1.0.1 -> 1.0.2).
+
+2) GUARDAR Y SUBIR CODIGO A GITHUB (RAMA main)
+Comandos:
+  git add .
+  git commit -m "Bump version to 1.0.2"
+  git push origin main
+
+Nota:
+- release/ y release*/ deben estar en .gitignore.
+- No subir binarios del build por commit.
+
+3) GENERAR BUILD WINDOWS
+Comando:
+  npm run dist:win
+
+Esto genera en carpeta release:
+- LotifiElectron-Setup-X.Y.Z.exe
+- latest.yml
+- LotifiElectron-Setup-X.Y.Z.exe.blockmap
+
+4) CREAR RELEASE EN GITHUB
+- Ir a: Repo -> Releases -> Draft a new release
+- Tag: vX.Y.Z (ejemplo: v1.0.2)
+- Target: main
+- Title: LotifiElectron vX.Y.Z
+- Adjuntar 3 archivos (de release/):
+  1. LotifiElectron-Setup-X.Y.Z.exe
+  2. latest.yml
+  3. LotifiElectron-Setup-X.Y.Z.exe.blockmap
+- Opciones:
+  - Set as a pre-release: NO
+  - Set as the latest release: SI
+- Click en Publish release
+
+5) PRUEBA DE AUTO-UPDATE
+- Tener instalada version anterior (ejemplo: 1.0.1).
+- Abrir app.
+- Debe detectar update disponible (1.0.2), descargar y pedir reinicio.
+
+COMO INSTALAR EN PC NUEVA
+- Descargar y ejecutar:
+  LotifiElectron-Setup-X.Y.Z.exe
+
+ERRORES COMUNES
+
+A) "Repository not found"
+- Revisar URL del remote origin.
+- Verificar nombre exacto del repo en GitHub.
+
+B) Push rechazado por archivos grandes (>100MB)
+- Causa: win-unpacked/.exe trackeados en git.
+- Solucion:
+  - Ignorar release/ y release*/
+  - Quitar del tracking:
+      git rm -r --cached release release2 release3 release4 release5
+  - Commit y push de limpieza.
+
+C) Cambios no staged al hacer commit
+- Si estas en backend/ y cambiaste ../package.json, moverte a raiz:
+    cd ..
+  luego:
+    git add package.json
+    git commit -m "Bump version to X.Y.Z"
+
+D) VS Code pide stage antes de commit
+- Puedes dar "Si" para stage automatico.
+- O hacer stage manual con + por archivo.
+
+RECOMENDACION OPERATIVA
+- Mantener un solo flujo:
+  1) versionar codigo
+  2) build
+  3) release
+- No mezclar binarios de build dentro del historial de git.
