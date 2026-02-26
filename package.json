@@ -1,6 +1,6 @@
 {
   "name": "lotifielectron",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "LotifiElectron desktop app",
   "author": "German Manuel Ortiz <gkpach.go@gmail.com>",
   "main": "electron/main.js",
