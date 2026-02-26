@@ -1,0 +1,12 @@
+DEJARE PENDIENTE CALCULAR EL ABONO A CAPITAL
+
+CUOTAS PAGADAS
+
+✔ Pago menor a cuota
+✔ Pago exacto
+✔ Pago mayor
+✔ Mora calculada correctamente
+✔ No se pierde capital
+✔ No se pierde mora
+✔ No se pierde excedente
+✔ Cuota solo se marca pagada cuando capital llega a 0

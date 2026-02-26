@@ -1,0 +1,190 @@
+🧠 6️⃣ Nueva lógica mental del sistema
+
+Antes:
+Sistema basado en letras.
+
+Ahora:
+Sistema basado en saldo.
+
+Las letras solo organizan fechas.
+El saldo manda.
+
+===================== contexto del proyecto ===============
+resumen claro y profesional de cómo está construido tu sistema actualmente, tanto a nivel lógico como de base de datos.
+
+---
+
+# 🏗️ 1️⃣ Arquitectura del Proyecto
+
+### 🔹 Backend
+
+* **Node.js + Express**
+* **MySQL**
+* Arquitectura por controladores:
+
+  * `contratos.controller.js`
+  * `cuotas.controller.js`
+  * `pagos.controller.js`
+  * `recibos.controller.js`
+  * `deudores.controller.js`
+
+### 🔹 Frontend
+
+* HTML + Bootstrap
+* JS modular (`pagos.js`, etc.)
+* Comunicación vía `fetch()` a API REST
+
+---
+
+# 💾 2️⃣ Estructura Financiera (Modelo Real)
+
+El sistema maneja:
+
+✔ Cuotas fijas
+✔ Capital pendiente dinámico
+✔ Interés por mora
+✔ Penalización fija
+✔ Pagos parciales
+✔ Pagos extra
+✔ Recibo profesional con saldo acumulado
+
+---
+
+# 🗂️ 3️⃣ Tablas Clave
+
+## 📘 contratos
+
+Contiene:
+
+* `monto_financiado`
+* `prima`
+* `capital_pendiente`
+* `tipo_financiamiento`
+
+  * `interes_saldo`
+  * `penalizacion_fija`
+* `tasa_interes_anual`
+* `dias_gracia`
+* `penalizacion_fija`
+* `estado`
+👉 Aquí vive el estado financiero real del contrato.
+---
+
+## 📗 cuotas
+
+Contiene:
+
+* `id_cuota`
+* `id_contrato`
+* `numero_cuota`
+* `fecha_vencimiento`
+* `monto_cuota`
+* `capital_pendiente`
+* `estado`
+
+👉 La cuota NO representa el capital total.
+👉 Es solo el calendario.
+
+---
+
+## 📕 pagos
+
+Contiene:
+
+* `id_pago`
+* `id_cuota`
+* `fecha_abono`
+* `forma_pago`
+* `banco`
+* `abono_capital`
+* `abono_interes`
+* `abono_mora`
+* `monto_total`
+* `numero_recibo`
+
+👉 Aquí está el desglose financiero real.
+👉 Nunca se pierde cómo se aplicó el dinero.
+
+---
+
+# 🧮 4️⃣ Regla Financiera Actual
+
+Orden correcto aplicado:
+
+### 1️⃣ Interés o mora
+
+### 2️⃣ Capital
+
+El sistema permite:
+
+* Pagar menos que la cuota
+* Pagar solo interés
+* Pagar solo capital
+* Pagar más que la cuota
+* Abonos extraordinarios
+
+Y solo marca la cuota como `pagada` cuando:
+
+```
+capital_pendiente_cuota <= 0
+```
+
+---
+
+# 💰 5️⃣ Tipos de Financiamiento
+
+## 🔵 Penalización fija
+
+Si se pasa de días de gracia:
+
+```
+abono_mora = penalizacion_fija
+```
+
+## 🟢 Interés por cuota vencida
+
+Si hay atraso:
+```
+interes = (cuota.monto_cuota * tasa * diasAtraso) / 360
+```
+
+Importante:
+Se calcula usando `fecha_abono`
+→ Permite pagos retroactivos reales
+---
+# 🧾 6️⃣ Recibo Profesional
+
+El recibo imprime:
+
+* Cliente
+* Código de lote (001A1)
+* Cuota mensual
+* Mora X Cuotas
+* Abono total
+* Saldo anterior
+* Menos abono (capital)
+* Saldo actual
+* Saldo acumulado
+* Cantidad en letras
+
+Y los saldos se calculan con:
+
+Saldo anterior = monto_financiado - capital_pagado_antes
+Saldo actual = monto_financiado - capital_pagado_total
+Saldo acumulado = prima + capital_pagado_total
+
+# 🏦 7️⃣ Estado Actual del Sistema
+
+✔ Permite pagos retroactivos
+✔ Soporta dos métodos financieros
+✔ Soporta pagos parciales
+✔ Soporta pagos extra
+✔ No pierde historial
+✔ Capital pendiente dinámico
+✔ Contrato se cancela automáticamente cuando capital llega a 0
+---
+# 🎯 En qué punto está tu proyecto
+Estás en un nivel avanzado:
+No es un CRUD básico.
+Es ya un:
+> 🏢 Sistema financiero inmobiliario real con lógica contable aplicada.

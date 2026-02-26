@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Lotificaciones | Lotifi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --lot-bg: #f5f7fc;
+      --lot-card: #ffffff;
+      --lot-border: #dfe7f3;
+      --lot-text: #0f172a;
+      --lot-muted: #64748b;
+      --lot-primary: #0a4ecb;
+      --lot-primary-soft: #eaf1ff;
+      --lot-shadow: 0 14px 30px rgba(15, 23, 42, 0.09);
+    }
+
+    body {
+      background: radial-gradient(circle at 15% 8%, #eaf2ff 0, var(--lot-bg) 42%);
+      color: var(--lot-text);
+    }
+
+    .lot-shell {
+      width: min(100%, 1600px);
+      animation: lotIn 280ms ease-out;
+    }
+
+    .lot-message-shell {
+      width: min(100%, 1600px);
+    }
+
+    .lot-hero {
+      border: 1px solid var(--lot-border);
+      border-radius: 16px;
+      background: linear-gradient(140deg, #ffffff 0%, #f8fbff 100%);
+      box-shadow: var(--lot-shadow);
+      padding: 1rem 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .lot-title {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .lot-subtitle {
+      margin: 0.35rem 0 0;
+      color: var(--lot-muted);
+      font-size: 0.95rem;
+    }
+
+    .lot-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 0.9rem;
+    }
+
+    .lot-chip {
+      background: var(--lot-primary-soft);
+      color: var(--lot-primary);
+      border-radius: 999px;
+      padding: 0.2rem 0.65rem;
+      font-size: 0.83rem;
+      font-weight: 600;
+      border: 1px solid #d4e2ff;
+    }
+
+    .lot-btn-primary {
+      border-radius: 10px;
+      font-weight: 600;
+      padding-inline: 1rem;
+      background: var(--lot-primary);
+      border-color: var(--lot-primary);
+      transition: transform 140ms ease, box-shadow 140ms ease;
+    }
+
+    .lot-btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(10, 78, 203, 0.25);
+    }
+
+    .lot-card {
+      border: 1px solid var(--lot-border);
+      border-radius: 16px;
+      box-shadow: var(--lot-shadow);
+      background: var(--lot-card);
+      overflow: hidden;
+    }
+
+    .lot-table-wrap {
+      max-height: 470px;
+      overflow: auto;
+    }
+
+    .lot-table-wrap .table {
+      margin-bottom: 0;
+    }
+
+    .lot-table-wrap .table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .table tbody tr td {
+      vertical-align: middle;
+    }
+
+    .table tbody tr:hover td {
+      background-color: #f7fbff;
+    }
+
+    .accordion-item {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 0.55rem;
+    }
+
+    .accordion-button {
+      font-weight: 600;
+      background: #f8fafc;
+    }
+
+    .modal-content {
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .form-control,
+    .form-select,
+    textarea.form-control {
+      border-radius: 10px;
+      border-color: #d8deea;
+      transition: all 160ms ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus,
+    textarea.form-control:focus {
+      border-color: var(--lot-primary);
+      box-shadow: 0 0 0 0.2rem rgba(10, 78, 203, 0.14);
+    }
+
+    @keyframes lotIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">LOTIFI</a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+        data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="cliente.html">Clientes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="lotificaciones.html">Lotificaciones</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="contratos.html">Contratos</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="pagos.html">Pagos</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="deudores.html">Deudores</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="reportes.html">Reportes</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-3 px-xl-4 mt-4 lot-shell">
+
+    <div class="lot-hero">
+      <h4 class="lot-title">Lotificaciones</h4>
+      <p class="lot-subtitle">Gestiona lotificaciones, poligonos y lotes desde un solo panel.</p>
+    </div>
+
+    <div class="lot-toolbar">
+      <span class="lot-chip">Catalogo de proyectos</span>
+      <button class="btn btn-primary lot-btn-primary" data-bs-toggle="modal" data-bs-target="#modalLotificacion">
+        Nueva Lotificacion
+      </button>
+    </div>
+
+    <div class="card lot-card">
+      <div class="card-body p-0">
+        <div class="lot-table-wrap">
+          <table class="table table-striped mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Ubicacion</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaLotificaciones">
+              <!-- dinamico -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="container-fluid px-3 px-xl-4 mt-3 lot-message-shell">
+    <div id="mensajeLotificacion"></div>
+  </div>
+
+  <div class="modal fade" id="modalLotificacion" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Nueva Lotificacion</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <form id="formLotificacion">
+          <div class="modal-body">
+
+            <div class="mb-3">
+              <label class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="nombreLot" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Ubicacion</label>
+              <input type="text" class="form-control" id="ubicacionLot" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Descripcion</label>
+              <textarea class="form-control" id="descripcionLot" rows="3"></textarea>
+            </div>
+
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Guardar
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalDetalleLotificacion" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">
+            Lotificacion: <span id="detalleNombre" class="text-primary"></span>
+          </h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+
+          <div class="mb-3">
+            <strong>Ubicacion:</strong>
+            <span id="detalleUbicacion"></span><br>
+
+            <strong>Descripcion:</strong>
+            <span id="detalleDescripcion"></span>
+          </div>
+
+          <hr>
+
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">Poligonos</h6>
+            <button class="btn btn-sm btn-primary"
+              data-bs-toggle="modal"
+              data-bs-target="#modalPoligono">
+              Nuevo Poligono
+            </button>
+          </div>
+
+          <div class="accordion" id="accordionPoligonos">
+            <em class="text-muted">Sin poligonos registrados</em>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">
+            Cerrar
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalPoligono">
+    <div class="modal-dialog">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Nuevo Poligono</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <form id="formPoligono">
+          <div class="modal-body">
+            <input type="hidden" id="poligonoLotificacionId">
+
+            <div class="mb-3">
+              <label class="form-label">Nombre del poligono</label>
+              <input type="text" class="form-control" id="nombrePoligono" required>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalLote">
+    <div class="modal-dialog">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Nuevo Lote</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <form id="formLote">
+          <div class="modal-body">
+            <input type="hidden" id="lotePoligonoId">
+
+            <div class="mb-2">
+              <label class="form-label">Numero de lote</label>
+              <input type="number" class="form-control" id="numeroLote" required>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Area</label>
+              <input type="number" class="form-control" id="areaLote" required>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Unidad</label>
+              <select class="form-select" id="unidadArea">
+                <option value="v2">v2</option>
+                <option value="m2">m2</option>
+              </select>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Precio base</label>
+              <input type="number" class="form-control" id="precioBase" required>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Precio final</label>
+              <input type="number" class="form-control" id="precioFinal">
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Estado</label>
+              <select class="form-select" id="estadoLote">
+                <option value="disponible">Disponible</option>
+                <option value="reservado">Reservado</option>
+                <option value="vendido">Vendido</option>
+              </select>
+            </div>
+
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-success">Guardar</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/animaciones-ui.js"></script>
+  <script src="js/lockscreen.js"></script>
+  <script src="js/lotificaciones.js"></script>
+</body>
+</html>

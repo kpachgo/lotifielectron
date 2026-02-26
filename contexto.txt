@@ -1,0 +1,192 @@
+CONTEXTO TECNICO DEL PROYECTO LOTIFI
+Fecha de analisis: 2026-02-22
+
+1) ARQUITECTURA ACTUAL
+- Backend: Node.js + Express + MySQL (mysql2/promise).
+- Frontend: HTML + Bootstrap + JS modular con fetch a API REST.
+- Modulos clave de negocio:
+  - contratos.controller.js
+  - pagos.controller.js
+  - cuotas.controller.js
+  - deudores.controller.js
+  - recibos.controller.js
+  - reportes.controller.js
+
+2) MODELO FINANCIERO OPERATIVO
+El sistema no trabaja como "letras cerradas". Trabaja por saldo:
+- El saldo real del contrato vive en `contratos.capital_pendiente`.
+- Cada cuota tiene su propio saldo en `cuotas.capital_pendiente`.
+- Cada pago guarda desglose completo:
+  - `abono_capital`
+  - `abono_interes`
+  - `abono_mora`
+  - `monto_total`
+- Regla de cierre:
+  - cuota pagada cuando `cuotas.capital_pendiente = 0`
+  - contrato cancelado cuando `contratos.capital_pendiente = 0`
+
+3) METODO 1: interes_saldo
+
+3.1 Configuracion (al crear contrato)
+- `contratos.tipo_financiamiento = 'interes_saldo'`
+- `contratos.tasa_interes_anual` se guarda
+- `contratos.penalizacion_fija` se guarda en NULL
+- `contratos.dias_gracia` se usa para disparar calculo
+
+3.2 Calculo en pago individual (registrarPago)
+Si hay atraso y supera gracia:
+`interes_total_generado = (cuota.capital_pendiente * tasa_anual * dias_atraso) / 360`
+
+Luego:
+- `interes_pendiente = interes_total_generado - interes_ya_pagado_en_esa_cuota`
+- Primero se aplica a interes, despues a capital.
+
+3.3 Comportamiento importante
+- Soporta pago parcial.
+- Soporta pago retroactivo usando `fecha_abono` contra `fecha_vencimiento`.
+- No permite monto excedente en pago individual (devuelve total exacto requerido).
+- Valida que la fecha de abono no sea menor al ultimo pago del contrato.
+
+4) METODO 2: penalizacion_fija
+
+4.1 Configuracion (al crear contrato)
+- `contratos.tipo_financiamiento = 'penalizacion_fija'`
+- `contratos.penalizacion_fija` se guarda
+- `contratos.tasa_interes_anual` se guarda en NULL
+- `contratos.dias_gracia` se usa para disparar penalizacion
+
+4.2 Calculo en pago individual (registrarPago)
+Si hay atraso y supera gracia:
+`mora_total_generada = contratos.penalizacion_fija`
+
+Luego:
+- `mora_pendiente = mora_total_generada - mora_ya_pagada_en_esa_cuota`
+- Primero se aplica mora, despues capital.
+
+4.3 Comportamiento importante
+- Penalizacion fija por cuota vencida (no incremental diaria en registrarPago).
+- Evita cobrar doble mora en la misma cuota (descuenta pagos previos de mora).
+
+5) ORDEN DE APLICACION DEL DINERO (PAGO INDIVIDUAL)
+1. interes (si aplica)
+2. mora (si aplica)
+3. capital
+
+6) PAGO MASIVO
+- Endpoint: `POST /api/pagos/masivo`
+- No recalcula automaticamente interes/mora por cada cuota.
+- Recibe `mora_total_manual` e `interes_total_manual` y los distribuye por rango.
+- Obliga iniciar desde la primera cuota pendiente.
+- No permite saltos de cuotas.
+- Marca cada cuota del rango como pagada (capital a 0).
+- Actualiza capital_pendiente del contrato con el total de capital aplicado.
+
+7) DIFERENCIAS IMPORTANTES ENTRE CODIGO Y DOCUMENTOS ANTIGUOS
+- El archivo `base de datos.txt` no refleja totalmente el esquema actual usado por codigo.
+- Columnas requeridas por backend que no estaban en esquema historico:
+  - `contratos.tipo_financiamiento`
+  - `contratos.capital_pendiente`
+  - `contratos.tasa_interes_anual`
+  - `contratos.penalizacion_fija`
+  - `contratos.dias_gracia`
+  - `cuotas.capital_pendiente`
+  - `pagos.abono_mora`
+  - `pagos.numero_recibo`
+  - `lotes.prima`
+  - `lotes.cuota_5_anios`, `lotes.cuota_10_anios`, `lotes.cuota_15_anios`
+  - estado `lotes = 'promesa_venta'` (ademas de disponible/vendido)
+
+8) OBSERVACIONES TECNICAS DETECTADAS
+- `cuotas.controller.js` define `TASA_MORA_DIARIA = 0.035 / 30` para consulta de mora por cuota.
+- En `pagos.controller.js`, lo mostrado y lo cobrado ya se encuentran alineados para pago individual y para escenarios con varias cuotas exigibles por fecha.
+
+9) ENTREGABLES CREADOS
+- `contexto.txt` (este documento)
+- Carpeta `backend/sql` con:
+  - `01_schema_lotifi.sql` (esquema base alineado a codigo actual)
+  - `02_reset_tablas.sql` (reseteo rapido para pruebas/verificacion)
+
+10) CIERRE DE JORNADA (2026-02-22)
+- Se consolidaron reglas de fecha para pagos:
+  - fecha valida obligatoria (YYYY-MM-DD)
+  - no menor a fecha_inicio del contrato
+  - no mayor a fecha_vencimiento del contrato
+  - no menor al ultimo pago del contrato
+- En `pagos` se elimino el bloqueo de "pago multiple por rango" para el flujo normal:
+  - ahora el pago normal sugiere monto unico segun `fecha_abono`
+  - cuando hay varias cuotas exigibles por fecha, calcula total sugerido global
+- En `deudores`:
+  - `interes_saldo`: mora 3.5% mensual prorrateada por dias (max 30)
+  - `penalizacion_fija`: se ajusto para contar mora solo en cuotas que superan `dias_gracia`
+- En `reportes/resumen`:
+  - saldo pendiente real = monto_financiado - capital_pagado
+  - saldo acumulado real = prima + capital_pagado
+  - total abonado mostrado = prima + total de pagos registrados
+  - etiqueta actualizada en UI: "Total Abonado (Incluye Prima)"
+- Se hizo intento de mejora visual tipo mini ticket POS en `pagos.html`, pero fue revertido por decision funcional.
+  - Queda pendiente rediseñar esa parte en una futura iteracion.
+
+Estado final del dia:
+- Motor financiero y validaciones de fecha quedaron operativos.
+- Deudores y reportes alineados a datos reales del contrato.
+- Mejora visual POS en pagos: pendiente.
+
+11) ACTUALIZACION POSTERIOR (2026-02-22)
+- En `pagos.controller.js` se unifico la logica de calculo de pago exigible para evitar diferencias entre:
+  - `estadoCuentaContrato`
+  - `buscarPorCodigoLote`
+  - `registrarPago`
+- Para `interes_saldo` en multiples cuotas exigibles:
+  - la mora ahora se calcula por cuota (segun atraso propio), con prorrateo diario y tope de 30 dias por cuota
+  - ya no se aplica el atraso de la primera cuota a todo el rango
+- Se confirmo criterio de redondeo actual:
+  - la mora global se acumula en precision y se redondea al final (puede variar 0.01 vs redondeo por cuota)
+- En `frontend/js/pagos.js`:
+  - al presionar `Pagar`, `Fecha Abono` se sugiere con la fecha actual (respetando min/max del contrato)
+  - se agregaron mensajes aclaratorios de "cuota pendiente actual" y "rango exigible por fecha de abono"
+- En `frontend/pagos.html`:
+  - se renombro la etiqueta visual a `Cuota/Rango` y `Cuota/Rango Exigible` para reducir confusion operativa.
+
+12) VALIDACION OPERATIVA ADICIONAL (2026-02-22)
+- Se verifico comportamiento de pagos adelantados y pagos mayores a cuota en `interes_saldo`:
+  - si el monto excede la cuota/rango exigible del dia, el excedente se aplica a capital de cuotas futuras
+  - en lineas de excedente (`EX-C*`) el sistema registra `abono_interes = 0` y `abono_mora = 0`, solo capital
+- Caso validado en entorno de prueba:
+  - mismo dia de abono (`2026-02-22`) con pagos grandes acumulados por `25,700.55`
+  - distribucion del dia: `capital 24,723.93`, `interes 976.62`, `mora 0.00`
+  - estado posterior de cuotas: `55` pagadas y `5` pendientes (primera pendiente: cuota `56`, parcial)
+- Conclusion funcional:
+  - el plazo nominal (1..60) no se renumera ni se reduce visualmente
+  - la aceleracion se refleja en cuotas marcadas como pagadas antes de su vencimiento y en menor interes futuro acumulado.
+
+13) AJUSTES DE CONSISTENCIA (2026-02-22)
+- En `pagos.controller.js` se habilito pago parcial cuando existe rango exigible (ya no bloquea por insuficiente).
+- Para rango exigible, se definio regla estricta global de aplicacion:
+  1. mora total del rango
+  2. interes total del rango
+  3. capital
+- Se corrigio recobro de mora en rango:
+  - la mora exigible del rango ahora se arma por cuota y descuenta mora ya pagada por cada cuota.
+- En `deudores.controller.js` se alineo el calculo con datos reales:
+  - criterio de fecha exigible `fecha_vencimiento <= CURDATE()`
+  - solo cuotas con `capital_pendiente > 0`
+  - `total_cuotas_vencidas` sobre saldo real (capital pendiente), no sobre monto nominal de cuota
+  - `monto_mora` como mora pendiente real (mora generada menos mora ya pagada).
+- En `frontend/js/pagos.js` se agrego confirmacion antes de registrar pago parcial de rango.
+- Mejora visual en `pagos`:
+  - en Estado de Cuenta la columna Cuota ahora muestra tambien referencia de cuota base para evitar confusion cuando hay rangos.
+
+14) VALIDACION PENALIZACION FIJA Y AJUSTE UI FINAL (2026-02-22)
+- Se valido contrato `penalizacion_fija` en `pagos`:
+  - comportamiento correcto de rango exigible por fecha (ejemplo validado: `5-9`)
+  - `cargos` correctos por penalizacion fija en cuotas que superan `dias_gracia`
+  - total mostrado coherente con `capital pendiente del rango + cargos`.
+- Se confirmo consistencia entre:
+  - `pagos.html` (estado de cuenta por fecha)
+  - `reportes.html` (mora pagada historica, no mora pendiente)
+  - `deudores.html` (mora pendiente real tras descontar mora ya pagada por cuota).
+- Ajuste visual final en `frontend/js/pagos.js`:
+  - en columna `Cuota` se elimino la linea de `Cuota principal`
+  - queda solo:
+    - total de cuota/rango exigible
+    - `Cuota base: $X x N` para contexto rapido.

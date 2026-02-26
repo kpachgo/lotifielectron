@@ -1,0 +1,253 @@
+Perfecto 👌 aquí tienes un resumen claro, técnico y ordenado de **los dos métodos financieros que estás usando**, cómo se reflejan en la base de datos y cómo se calculan.
+
+# 🏦 LOS DOS MÉTODOS FINANCIEROS DEL SISTEMA
+
+Tu sistema soporta **dos motores financieros distintos**, definidos en:
+contratos.tipo_financiamiento
+
+Valores:
+
+* `'interes_saldo'`
+* `'penalizacion_fija'`
+
+# 🔵 1️⃣ MÉTODO: INTERÉS SOBRE SALDO (30/360)
+
+## 📌 Concepto
+
+* Cuotas fijas.
+* Interés mensual sobre el capital pendiente.
+* El capital pendiente disminuye con cada pago.
+* No usa días de gracia.
+* No hay penalización fija.
+* Puede pagarse más que la cuota (abono a capital).
+
+## 📊 Cómo se refleja en la base de datos
+
+### En `contratos`
+
+Campos utilizados:
+
+* `tipo_financiamiento = 'interes_saldo'`
+* `tasa_interes_anual`
+* `capital_pendiente`
+* `cuota`
+* `monto_financiado`
+
+`penalizacion_fija` → NULL
+`dias_gracia` → no se usa
+
+---
+
+### En `cuotas`
+
+* `monto_cuota` → cuota fija mensual
+* `estado`
+* `interes_generado`
+* `capital_pendiente` (cuota fija)
+
+---
+
+### En `pagos`
+
+* `abono_interes`
+* `abono_capital`
+* `monto_total`
+
+---
+
+## 🧮 Cómo se calcula
+
+### 📌 Interés mensual (método 30/360)
+
+```
+Interés = CapitalPendiente × (TasaAnual / 100) × 30 / 360
+```
+
+Ejemplo:
+
+Capital pendiente: 27,500
+Tasa anual: 16%
+
+```
+Interés = 27,500 × 0.16 × 30 / 360
+Interés = 366.67
+```
+
+---
+
+## 💰 Orden de aplicación del pago
+
+Cuando el cliente paga:
+
+1️⃣ Primero se paga interés
+2️⃣ Luego capital
+3️⃣ Se reduce `contratos.capital_pendiente`
+
+Si paga más que la cuota:
+
+* El excedente va directo a capital.
+* Puede liquidar antes del plazo.
+
+---
+
+## 📉 Qué ocurre cada mes
+
+* El capital pendiente baja.
+* El interés del siguiente mes baja.
+* La cuota es fija, pero la proporción interés/capital cambia.
+
+---
+
+# 🟢 2️⃣ MÉTODO: PENALIZACIÓN FIJA POR CUOTA VENCIDA
+
+## 📌 Concepto
+
+* Cuotas fijas.
+* No hay interés financiero.
+* Solo penalización fija si hay atraso.
+* La penalización no aumenta.
+* Aplica solo si el atraso supera los días de gracia.
+
+---
+
+## 📊 Cómo se refleja en la base de datos
+
+### En `contratos`
+
+Campos utilizados:
+
+* `tipo_financiamiento = 'penalizacion_fija'`
+* `penalizacion_fija`
+* `dias_gracia`
+* `cuota`
+* `capital_pendiente`
+
+`tasa_interes_anual` → NULL
+
+---
+
+### En `cuotas`
+
+* `monto_cuota`
+* `penalizacion_aplicada`
+* `estado`
+
+---
+
+### En `pagos`
+
+* `abono_mora`
+* `abono_capital`
+* `monto_total`
+
+---
+
+## 🧮 Cómo se calcula
+
+### 📌 Primero se calculan días de atraso
+
+```
+diasAtraso = fechaActual - fecha_vencimiento
+```
+
+---
+
+### 📌 Regla
+
+Si:
+
+```
+diasAtraso > dias_gracia
+```
+
+Entonces:
+
+```
+penalizacion = penalizacion_fija
+```
+
+Si no:
+
+```
+penalizacion = 0
+```
+
+---
+
+## 💰 Total a pagar
+
+```
+Total = cuota + penalizacion
+```
+
+---
+
+## 💳 Orden de aplicación del pago
+
+1️⃣ Primero paga penalización
+2️⃣ Luego capital
+3️⃣ Se reduce `contratos.capital_pendiente`
+
+---
+
+# 🔎 Diferencia clave entre ambos motores
+
+| Característica        | Interés sobre saldo | Penalización fija |
+| --------------------- | ------------------- | ----------------- |
+| Interés financiero    | ✅ Sí                | ❌ No              |
+| Penalización fija     | ❌ No                | ✅ Sí              |
+| Usa días de gracia    | ❌ No                | ✅ Sí              |
+| Interés baja cada mes | ✅ Sí                | ❌ No aplica       |
+| Permite abono extra   | ✅ Sí                | ✅ Sí              |
+
+---
+
+# 🧠 Cómo decide el sistema qué motor usar
+
+En backend:
+
+```js
+if (contrato.tipo_financiamiento === 'interes_saldo') {
+   // calcular interés 30/360
+}
+
+if (contrato.tipo_financiamiento === 'penalizacion_fija') {
+   // aplicar penalización fija si corresponde
+}
+```
+
+---
+
+# 🏗 Arquitectura financiera actual
+
+* Las cuotas son calendario fijo.
+* El capital real vive en `contratos.capital_pendiente`.
+* El pago siempre se descompone:
+
+  * interés
+  * mora
+  * capital
+* El sistema permite liquidación anticipada.
+* Se pueden adjuntar comprobantes digitales.
+* Se guarda número de recibo físico.
+
+============================================
+use lotifi;
+-- 1️⃣ Desactivar llaves foráneas
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- 2️⃣ Vaciar tablas (reinicia AUTO_INCREMENT)
+TRUNCATE TABLE recibos;
+TRUNCATE TABLE pagos;
+TRUNCATE TABLE cuotas;
+TRUNCATE TABLE contratos;
+TRUNCATE TABLE reservas;
+TRUNCATE TABLE documentos;
+TRUNCATE TABLE gastos;
+TRUNCATE TABLE lotes;
+TRUNCATE TABLE poligonos;
+TRUNCATE TABLE lotificaciones;
+TRUNCATE TABLE cliente;
+
+-- 3️⃣ Reactivar llaves foráneas
+SET FOREIGN_KEY_CHECKS = 1;

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Clientes en Mora | Lotifi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --dg-bg: #f4f7fc;
+      --dg-card: #ffffff;
+      --dg-border: #dbe4f2;
+      --dg-text: #0f172a;
+      --dg-muted: #64748b;
+      --dg-primary: #0a4ecb;
+      --dg-primary-soft: #eaf1ff;
+      --dg-shadow: 0 14px 32px rgba(15, 23, 42, 0.09);
+    }
+
+    body {
+      background: radial-gradient(circle at 12% 8%, #eaf2ff 0, var(--dg-bg) 42%);
+      color: var(--dg-text);
+    }
+
+    .dg-shell {
+      width: min(100%, 1740px);
+      animation: dgIn 280ms ease-out;
+    }
+
+    .dg-hero {
+      border: 1px solid var(--dg-border);
+      border-radius: 16px;
+      background: linear-gradient(140deg, #ffffff 0%, #f8fbff 100%);
+      box-shadow: var(--dg-shadow);
+      padding: 1rem 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .dg-title {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .dg-subtitle {
+      margin: 0.35rem 0 0;
+      color: var(--dg-muted);
+      font-size: 0.95rem;
+    }
+
+    .dg-card {
+      border: 1px solid var(--dg-border);
+      border-radius: 16px;
+      box-shadow: var(--dg-shadow);
+      background: var(--dg-card);
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .dg-card .card-body {
+      padding: 1.08rem 1.12rem;
+    }
+
+    .dg-section {
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.55px;
+      color: var(--dg-primary);
+      background: var(--dg-primary-soft);
+      border-radius: 8px;
+      display: inline-block;
+      padding: 0.24rem 0.55rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .dg-table-wrap {
+      overflow: auto;
+      border: 1px solid #d7e2f3;
+      border-radius: 12px;
+      background: #ffffff;
+    }
+
+    .dg-table-wrap .table {
+      margin-bottom: 0;
+      background: #ffffff;
+      min-width: 0;
+      width: 100%;
+      table-layout: auto;
+    }
+
+    .dg-table-wrap thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #e8f0ff !important;
+      color: #1e3a8a !important;
+      border-bottom: 1px solid #ccdaf5 !important;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      font-weight: 700;
+      padding: 0.66rem 0.7rem;
+      white-space: normal;
+      line-height: 1.2;
+    }
+
+    .dg-table-wrap tbody td {
+      padding: 0.62rem 0.7rem;
+      border-color: #edf2fb;
+      vertical-align: middle;
+      white-space: normal;
+    }
+
+    .dg-table-wrap thead th:first-child,
+    .dg-table-wrap tbody td:first-child {
+      min-width: 220px;
+      width: 22%;
+      white-space: normal;
+      font-weight: 600;
+    }
+
+    .dg-table-wrap thead th:nth-child(2),
+    .dg-table-wrap tbody td:nth-child(2) {
+      min-width: 130px;
+      width: 11%;
+    }
+
+    .dg-table-wrap thead th:nth-child(3),
+    .dg-table-wrap tbody td:nth-child(3) {
+      min-width: 108px;
+      width: 9%;
+      white-space: normal;
+    }
+
+    .dg-table-wrap thead th:nth-child(4),
+    .dg-table-wrap tbody td:nth-child(4) {
+      width: 8%;
+    }
+
+    .dg-table-wrap thead th:nth-child(5),
+    .dg-table-wrap tbody td:nth-child(5) {
+      width: 7%;
+      white-space: nowrap;
+    }
+
+    .dg-table-wrap thead th:nth-child(6),
+    .dg-table-wrap tbody td:nth-child(6) {
+      width: 9%;
+      white-space: nowrap;
+    }
+
+    .dg-table-wrap thead th:nth-child(7),
+    .dg-table-wrap tbody td:nth-child(7) {
+      width: 12%;
+      white-space: nowrap;
+    }
+
+    .dg-table-wrap thead th:nth-child(8),
+    .dg-table-wrap tbody td:nth-child(8) {
+      width: 7%;
+      white-space: nowrap;
+    }
+
+    .dg-table-wrap thead th:nth-child(9),
+    .dg-table-wrap tbody td:nth-child(9) {
+      width: 9%;
+      white-space: nowrap;
+    }
+
+    .dg-table-wrap thead th:nth-child(10),
+    .dg-table-wrap tbody td:nth-child(10) {
+      width: 8%;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 1200px) {
+      .dg-table-wrap .table {
+        min-width: 1180px;
+      }
+    }
+
+    .dg-table-wrap tbody tr:hover td {
+      background: #f7fbff;
+    }
+
+    .dg-table-wrap .table-striped > tbody > tr:nth-of-type(odd) > * {
+      --bs-table-accent-bg: #f9fbff;
+    }
+
+    .form-control,
+    .form-select,
+    textarea.form-control {
+      border-color: #d8deea;
+      border-radius: 10px;
+      transition: all 160ms ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus,
+    textarea.form-control:focus {
+      border-color: var(--dg-primary);
+      box-shadow: 0 0 0 0.2rem rgba(10, 78, 203, 0.14);
+    }
+
+    .dg-btn-primary {
+      background: var(--dg-primary);
+      border-color: var(--dg-primary);
+      border-radius: 10px;
+      font-weight: 600;
+      transition: transform 140ms ease, box-shadow 140ms ease;
+    }
+
+    .dg-btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(10, 78, 203, 0.24);
+    }
+
+    @keyframes dgIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">LOTIFI</a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+        data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="cliente.html">Clientes</a></li>
+          <li class="nav-item"><a class="nav-link" href="lotificaciones.html">Lotificaciones</a></li>
+          <li class="nav-item"><a class="nav-link" href="contratos.html">Contratos</a></li>
+          <li class="nav-item"><a class="nav-link" href="pagos.html">Pagos</a></li>
+          <li class="nav-item"><a class="nav-link" href="deudores.html">Deudores</a></li>
+          <li class="nav-item"><a class="nav-link" href="reportes.html">Reportes</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-3 px-xl-4 mt-4 dg-shell">
+
+    <div class="dg-hero">
+      <h4 class="dg-title">Clientes en Mora</h4>
+      <p class="dg-subtitle">Listado de clientes con cuotas vencidas y pendientes de pago.</p>
+    </div>
+
+    <div class="card dg-card">
+      <div class="card-body">
+        <span class="dg-section">Filtros</span>
+
+        <div class="row g-3">
+          <div class="col-md-5">
+            <label class="form-label">Buscar Cliente</label>
+            <input type="text" id="filtroCliente" class="form-control" placeholder="Nombre o apellido">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Lotificacion</label>
+            <select id="filtroLotificacion" class="form-select">
+              <option value="">Todas</option>
+            </select>
+          </div>
+
+          <div class="col-md-3 d-grid align-self-end">
+            <button id="btnBuscar" class="btn btn-primary dg-btn-primary">Buscar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card dg-card">
+      <div class="card-body">
+        <span class="dg-section">Clientes con Mora</span>
+
+        <div class="dg-table-wrap">
+          <table class="table table-bordered table-sm align-middle table-striped">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Lotificacion</th>
+                <th>Lote</th>
+                <th class="text-center">Tipo</th>
+                <th class="text-center">Cuotas Vencidas</th>
+                <th class="text-end">Valor Cuota</th>
+                <th class="text-end">Total Cuotas Vencidas</th>
+                <th class="text-center">Dias Atraso</th>
+                <th class="text-end">Monto en Mora</th>
+                <th class="text-end">Total</th>
+              </tr>
+            </thead>
+            <tbody id="tablaDeudores">
+              <tr>
+                <td colspan="10" class="text-center text-muted">Cargando deudores...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="paginacionDeudores" class="mt-3 d-flex justify-content-end"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/animaciones-ui.js"></script>
+  <script src="js/lockscreen.js"></script>
+  <script src="js/deudores.js"></script>
+</body>
+</html>

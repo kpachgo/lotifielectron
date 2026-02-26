@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Impresión de Recibo</title>
+<style>
+/* ===============================
+   CONFIGURACIÓN DE PÁGINA
+================================ */
+@page {
+  size: 210mm 135mm;
+  margin: 0;
+}
+html, body {
+  width: 210mm;
+  height: 135mm;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 9pt;
+  color: #000;
+}
+/* CONTENEDOR PRINCIPAL */
+.recibo {
+  position: relative;
+  width: 210mm;
+  height: 135mm;
+}
+/* ===============================
+   UTILIDAD DE POSICIÓN
+================================ */
+.field {
+  position: absolute;
+  white-space: nowrap;
+}
+/* ===============================
+   POSICIONES EXACTAS (MM)
+================================ */
+/* CLIENTE */
+#cliente-nombre   { left: 20mm; top: 32mm; font-size: 10pt; }
+#cliente-direccion{ left: 20mm; top: 40mm; }
+#cliente-doc      { left: 20mm; top: 48mm; }
+#cliente-tel      { left: 150mm; top: 40mm; }
+/* PAGO */
+#cuota-mensual    { left: 20mm; top: 60mm; }
+#abono-total      { left: 20mm; top: 92mm; font-size: 10pt; }
+#forma-pago       { left: 70mm; top: 60mm; }
+#banco            { left: 70mm; top: 68mm; }
+#fecha-abono      { left: 70mm; top: 76mm; }
+#fecha-recibo     { left: 70mm; top: 84mm; }
+/* SALDOS */
+#saldo-anterior   { left: 150mm; top: 60mm; }
+#menos-abono      { left: 150mm; top: 68mm; }
+#saldo-actual     { left: 150mm; top: 76mm; }
+#saldo-acumulado  { left: 150mm; top: 84mm; }
+/* TEXTO */
+#cantidad-letras  { left: 20mm; top: 104mm; width: 170mm; }
+#concepto-linea1  { left: 20mm; top: 112mm; }
+#concepto-linea2  { left: 20mm; top: 120mm; }
+/* FIRMA */
+#firma-cliente    { left: 20mm; top: 128mm; }
+</style>
+</head>
+<body>
+<div class="recibo">
+  <!-- CLIENTE -->
+  <div id="cliente-nombre" class="field"></div>
+  <div id="cliente-direccion" class="field"></div>
+  <div id="cliente-doc" class="field"></div>
+  <div id="cliente-tel" class="field"></div>
+  <div id="codigo-lote" class="field"></div>
+  <!-- PAGO -->
+  <div id="cuota-mensual" class="field"></div>
+  <div id="abono-total" class="field"></div>
+  <div id="forma-pago" class="field"></div>
+  <div id="banco" class="field"></div>
+  <div id="fecha-abono" class="field"></div>
+  <div id="fecha-recibo" class="field"></div>
+  <!-- SALDOS -->
+  <div id="saldo-anterior" class="field"></div>
+  <div id="menos-abono" class="field"></div>
+  <div id="saldo-actual" class="field"></div>
+  <div id="saldo-acumulado" class="field"></div>
+  <!-- TEXTO -->
+  <div id="cantidad-letras" class="field"></div>
+  <div id="concepto-linea1" class="field"></div>
+  <div id="concepto-linea2" class="field"></div>
+  <!-- FIRMA -->
+  <div id="firma-cliente" class="field"></div>
+</div>
+<script>
+// ===============================
+// CARGAR DATOS DEL RECIBO
+// ===============================
+const params = new URLSearchParams(window.location.search);
+const idPago = params.get('id_pago');
+if (!idPago) {
+  alert('Falta id_pago');
+}
+fetch(`http://localhost:3000/api/recibos/pago/${idPago}`)
+  .then(res => res.json())
+  .then(data => {
+    // CLIENTE
+    document.getElementById('cliente-nombre').innerText = data.cliente.nombre;
+    document.getElementById('cliente-direccion').innerText = data.cliente.direccion;
+    document.getElementById('cliente-doc').innerText = data.cliente.documento;
+    document.getElementById('cliente-tel').innerText = data.cliente.telefono;
+    document.getElementById('codigo-lote').innerText = data.cliente.codigo_lote || '';
+    // PAGO
+    document.getElementById('cuota-mensual').innerText =
+      `$${data.pago.cuota_mensual.toFixed(2)}`;
+    document.getElementById('abono-total').innerText =
+      `$${data.pago.abono_total.toFixed(2)}`;
+    document.getElementById('forma-pago').innerText = data.pago.forma_pago;
+    document.getElementById('banco').innerText = data.pago.banco || '';
+    document.getElementById('fecha-abono').innerText =
+      formatFecha(data.pago.fecha_abono);
+    document.getElementById('fecha-recibo').innerText =
+      formatFecha(data.pago.fecha_recibo);
+    // SALDOS
+    document.getElementById('saldo-anterior').innerText =
+      `$${data.saldos.saldo_anterior.toFixed(2)}`;
+    document.getElementById('menos-abono').innerText =
+      `$${data.saldos.menos_abono.toFixed(2)}`;
+    document.getElementById('saldo-actual').innerText =
+      `$${data.saldos.saldo_actual.toFixed(2)}`;
+    document.getElementById('saldo-acumulado').innerText =
+      `$${data.saldos.saldo_acumulado.toFixed(2)}`;
+    // TEXTO
+    document.getElementById('cantidad-letras').innerText =
+      data.texto.cantidad_letras;
+    document.getElementById('concepto-linea1').innerText =
+      data.texto.concepto[0];
+    document.getElementById('concepto-linea2').innerText =
+      data.texto.concepto[1];
+    // FIRMA
+    document.getElementById('firma-cliente').innerText =
+      data.cliente.nombre;
+    // IMPRIMIR AUTOMÁTICO
+    setTimeout(() => window.print(), 500);
+    // CERRAR DESPUÉS DE IMPRIMIR
+    window.onafterprint = () => {
+    window.close();
+};
+  });
+function formatFecha(fecha) {
+  if (!fecha) return '';
+  const d = new Date(fecha);
+  return d.toLocaleDateString('es-SV', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+}
+</script>
+</body>
+</html>

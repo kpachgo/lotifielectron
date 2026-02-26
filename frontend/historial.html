@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Lotifi | Sistema de Lotificación</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+</head>
+<body class="bg-light">
+
+  <!-- NAVBAR -->
+ <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">LOTIFI</a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+        data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="cliente.html">Clientes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="lotificaciones.html">Lotificaciones</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="contratos.html">Contratos</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="pagos.html">Pagos</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="deudores.html">Deudores</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="reportes.html">Reportes</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h5>Historial de Pagos por Lote</h5>
+
+    <div class="row g-2 mb-3">
+      <div class="col-md-3">
+        <label class="form-label">Lotificación</label>
+        <select id="selectHistLotificacion" class="form-select">
+          <option value="">Seleccione</option>
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Código</label>
+        <input id="inputHistCodigo" type="text" class="form-control">
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Polígono</label>
+        <select id="selectHistPoligono" class="form-select" disabled>
+          <option value="">Seleccione</option>
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <label class="form-label">Lote</label>
+        <select id="selectHistLote" class="form-select" disabled>
+          <option value="">Seleccione</option>
+        </select>
+      </div>
+
+      <div class="col-md-2 d-grid align-items-end">
+        <button class="btn btn-primary" onclick="cargarHistorialLote()">
+          Buscar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h6>Información del Lote</h6>
+
+    <div class="row">
+      <div class="col-md-3"><strong>Lote:</strong> <span id="histLote">—</span></div>
+      <div class="col-md-3"><strong>Cliente:</strong> <span id="histCliente">—</span></div>
+      <div class="col-md-3"><strong>Fecha Inicio:</strong> <span id="histFechaInicio">—</span></div>
+      <div class="col-md-3"><strong>Monto Total:</strong> $<span id="histMonto">0.00</span></div>
+    </div>
+
+    <div class="row mt-2">
+      <div class="col-md-3"><strong>Prima:</strong> $<span id="histPrima">0.00</span></div>
+      <div class="col-md-3"><strong># Cuotas:</strong> <span id="histCuotas">0</span></div>
+      <div class="col-md-3"><strong>Cuota Mensual:</strong> $<span id="histCuotaMensual">0.00</span></div>
+      <div class="col-md-3"><strong>Estado:</strong> <span id="histEstado">—</span></div>
+    </div>
+  </div>
+</div>
+<!-- REGISTRAR PAGO DEL LOTE -->
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h6>Registrar Pago</h6>
+
+    <form id="formHistorialPago">
+
+      <!-- IDs OCULTOS -->
+      <input type="hidden" id="histIdLote">
+      <input type="hidden" id="histIdCuota">
+
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <label class="form-label">Fecha Pago</label>
+          <input
+            type="date"
+            id="histFechaPago"
+            class="form-control"
+            required>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Monto</label>
+          <input
+            type="number"
+            id="histMontoPago"
+            class="form-control"
+            step="0.01"
+            required>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Forma de Pago</label>
+          <select
+            id="histFormaPago"
+            class="form-select"
+            required>
+            <option value="">Seleccione</option>
+            <option>Efectivo</option>
+            <option>Remesa</option>
+            <option>Transferencia</option>
+            <option>Cheque</option>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Banco</label>
+          <input
+            type="text"
+            id="histBanco"
+            class="form-control">
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label class="form-label">Número de Recibo</label>
+          <input
+            type="text"
+            id="histRecibo"
+            class="form-control"
+            required>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Fecha Recibo</label>
+          <input
+            type="date"
+            id="histFechaRecibo"
+            class="form-control"
+            required>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end">
+        <button class="btn btn-success">
+          Registrar Pago
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h6>Detalle de Pagos del Lote</h6>
+
+    <table class="table table-sm table-bordered">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Fecha Pago</th>
+          <th>Fecha Recibo</th>
+          <th>Recibo</th>
+          <th>Forma</th>
+          <th>Banco</th>
+          <th>Monto</th>
+          <th>Cuota</th>
+        </tr>
+      </thead>
+      <tbody id="tablaHistorialPagos">
+        <tr>
+          <td colspan="8" class="text-center text-muted">
+            Seleccione un lote para ver el historial
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+  <!-- Bootstrap JS -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+  </script>
+  <script src="js/animaciones-ui.js"></script>
+  <script src="js/lockscreen.js"></script>
+
+</body>
+</html>
+
+

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Lotifi | Sistema de Lotificación</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+  :root {
+    --idx-bg: #f3f7ff;
+    --idx-line: #dbe7ff;
+    --idx-primary: #0a4ecb;
+    --idx-dark: #0f172a;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 12% 8%, #e8f1ff 0, var(--idx-bg) 38%),
+      linear-gradient(180deg, #f7faff 0%, #f2f6ff 100%);
+    overflow-x: hidden;
+  }
+
+  .dashboard-hero {
+    position: relative;
+    border: 1px solid var(--idx-line);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+    padding: 1rem 1.1rem;
+    overflow: hidden;
+  }
+
+  .dashboard-hero::before {
+    content: "";
+    position: absolute;
+    width: 280px;
+    height: 280px;
+    right: -120px;
+    top: -140px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(10, 78, 203, 0.24) 0%, rgba(10, 78, 203, 0) 72%);
+    animation: heroPulse 5.8s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .dashboard-grid {
+    position: relative;
+  }
+
+  .dashboard-grid::before {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border-radius: 18px;
+    background-image:
+      linear-gradient(to right, rgba(10, 78, 203, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(10, 78, 203, 0.05) 1px, transparent 1px);
+    background-size: 22px 22px;
+    pointer-events: none;
+    mask-image: radial-gradient(circle at 50% 30%, black 42%, transparent 90%);
+  }
+
+  .dashboard-card {
+    position: relative;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border-radius: 15px;
+    border: 1px solid #d9e4f7;
+    transform-style: preserve-3d;
+  }
+
+  .dashboard-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+  }
+
+  .dashboard-card .display-4 {
+    transition: transform 220ms ease;
+  }
+
+  .dashboard-card:hover .display-4 {
+    transform: translateY(-2px) scale(1.06);
+  }
+
+  .reveal-up {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: revealUp 420ms ease-out forwards;
+  }
+
+  @keyframes revealUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes heroPulse {
+    0%, 100% {
+      transform: scale(0.96);
+      opacity: 0.72;
+    }
+    50% {
+      transform: scale(1.1);
+      opacity: 1;
+    }
+  }
+</style>
+
+</head>
+<body class="bg-light">
+
+  <!-- NAVBAR -->
+   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">LOTIFI</a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+        data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="cliente.html">Clientes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="lotificaciones.html">Lotificaciones</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="contratos.html">Contratos</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="pagos.html">Pagos</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="deudores.html">Deudores</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="reportes.html">Reportes</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- CONTENIDO -->
+  <div class="container mt-5">
+    <!-- ================= HEADER DASHBOARD ================= -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 dashboard-hero reveal-up">
+  <div>
+    <h3 class="mb-1 fw-bold">Panel principal</h3>
+    <div class="text-muted small">
+      Bienvenido a LOTIFI • <span id="lblFechaHoy"></span>
+    </div>
+  </div>
+
+  <div class="mt-3 mt-md-0 d-flex gap-2">
+    <a href="contratos.html" class="btn btn-outline-dark btn-sm">+ Nuevo contrato</a>
+    <a href="pagos.html" class="btn btn-dark btn-sm">Registrar pago</a>
+  </div>
+</div>
+
+    <!-- ================= MENU DASHBOARD ================= -->
+<div class="row g-4 mb-5 dashboard-grid">
+
+  <div class="col-md-4 col-lg-3">
+    <a href="cliente.html" class="text-decoration-none">
+      <div class="card shadow-sm text-center h-100 dashboard-card reveal-up">
+        <div class="card-body d-flex flex-column justify-content-center">
+          <div class="display-4 mb-3">👥</div>
+          <h5 class="fw-bold">Clientes</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-md-4 col-lg-3">
+    <a href="lotificaciones.html" class="text-decoration-none">
+      <div class="card shadow-sm text-center h-100 dashboard-card reveal-up">
+        <div class="card-body d-flex flex-column justify-content-center">
+          <div class="display-4 mb-3">🏘️</div>
+          <h5 class="fw-bold">Lotificaciones</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-md-4 col-lg-3">
+    <a href="contratos.html" class="text-decoration-none">
+      <div class="card shadow-sm text-center h-100 dashboard-card reveal-up">
+        <div class="card-body d-flex flex-column justify-content-center">
+          <div class="display-4 mb-3">📄</div>
+          <h5 class="fw-bold">Contratos</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-md-4 col-lg-3">
+    <a href="pagos.html" class="text-decoration-none">
+      <div class="card shadow-sm text-center h-100 dashboard-card reveal-up">
+        <div class="card-body d-flex flex-column justify-content-center">
+          <div class="display-4 mb-3">💰</div>
+          <h5 class="fw-bold">Pagos</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-md-4 col-lg-3">
+    <a href="deudores.html" class="text-decoration-none">
+      <div class="card shadow-sm text-center h-100 dashboard-card reveal-up">
+        <div class="card-body d-flex flex-column justify-content-center">
+          <div class="display-4 mb-3">⚠️</div>
+          <h5 class="fw-bold">Deudores</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-md-4 col-lg-3">
+    <a href="reportes.html" class="text-decoration-none">
+      <div class="card shadow-sm text-center h-100 dashboard-card reveal-up">
+        <div class="card-body d-flex flex-column justify-content-center">
+          <div class="display-4 mb-3">📊</div>
+          <h5 class="fw-bold">Reportes</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+  </script>
+  <script src="js/animaciones-ui.js"></script>
+  <script src="js/lockscreen.js"></script>
+  <script>
+    (() => {
+      const fecha = document.getElementById('lblFechaHoy');
+      if (fecha) {
+        fecha.textContent = new Date().toLocaleDateString('es-SV', {
+          weekday: 'long',
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric'
+        });
+      }
+
+      const revealNodes = document.querySelectorAll('.reveal-up');
+      revealNodes.forEach((node, index) => {
+        node.style.animationDelay = `${Math.min(index * 85, 520)}ms`;
+      });
+
+      document.querySelectorAll('.dashboard-card').forEach((card) => {
+        card.addEventListener('mousemove', (event) => {
+          const rect = card.getBoundingClientRect();
+          const x = event.clientX - rect.left;
+          const y = event.clientY - rect.top;
+          const rotateY = ((x / rect.width) - 0.5) * 8;
+          const rotateX = (0.5 - (y / rect.height)) * 8;
+          card.style.transform = `translateY(-6px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        });
+
+        card.addEventListener('mouseleave', () => {
+          card.style.transform = '';
+        });
+      });
+    })();
+  </script>
+
+</body>
+</html>
+
+

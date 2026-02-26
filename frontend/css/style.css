@@ -1,0 +1,26 @@
+/* 🔹 POR DEFECTO: NO EXISTE */
+.print-only {
+  display: none;
+}
+
+/* 🔹 SOLO CUANDO SE IMPRIME */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  #areaImpresion,
+  #areaImpresion * {
+    visibility: visible !important;
+  }
+
+  #areaImpresion {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+}
+
+

@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reportes | Lotifi</title>
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+  <link rel="stylesheet" href="css/print.css">
+
+  <style>
+    :root {
+      --rp-bg: #f4f7fc;
+      --rp-card: #ffffff;
+      --rp-border: #d9e3f3;
+      --rp-text: #0f172a;
+      --rp-muted: #64748b;
+      --rp-primary: #0a4ecb;
+      --rp-primary-soft: #eaf1ff;
+      --rp-shadow: 0 14px 32px rgba(15, 23, 42, 0.09);
+    }
+
+    body {
+      background: radial-gradient(circle at 8% 6%, #e8f1ff 0, var(--rp-bg) 42%);
+      color: var(--rp-text);
+    }
+
+    .rp-shell {
+      width: min(100%, 1600px);
+      animation: rpIn 280ms ease-out;
+    }
+
+    .rp-hero {
+      border: 1px solid var(--rp-border);
+      border-radius: 16px;
+      background: linear-gradient(140deg, #ffffff 0%, #f8fbff 100%);
+      box-shadow: var(--rp-shadow);
+      padding: 1rem 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .rp-title {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .rp-subtitle {
+      margin: 0.35rem 0 0;
+      color: var(--rp-muted);
+      font-size: 0.95rem;
+    }
+
+    .rp-card {
+      border: 1px solid var(--rp-border);
+      border-radius: 16px;
+      box-shadow: var(--rp-shadow);
+      background: var(--rp-card);
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .rp-card .card-body {
+      padding: 1.08rem 1.12rem;
+    }
+
+    .rp-section {
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.55px;
+      color: var(--rp-primary);
+      background: var(--rp-primary-soft);
+      border-radius: 8px;
+      display: inline-block;
+      padding: 0.24rem 0.55rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .form-control,
+    .form-select {
+      border-color: #d8deea;
+      border-radius: 10px;
+      transition: all 160ms ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+      border-color: var(--rp-primary);
+      box-shadow: 0 0 0 0.2rem rgba(10, 78, 203, 0.14);
+    }
+
+    .rp-btn-primary {
+      background: var(--rp-primary);
+      border-color: var(--rp-primary);
+      border-radius: 10px;
+      font-weight: 600;
+      transition: transform 140ms ease, box-shadow 140ms ease;
+    }
+
+    .rp-btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(10, 78, 203, 0.24);
+    }
+
+    .rp-summary-card {
+      border: 1px solid var(--rp-border);
+      border-radius: 14px;
+      background: linear-gradient(160deg, #ffffff 0%, #f6faff 100%);
+      box-shadow: var(--rp-shadow);
+      height: 100%;
+    }
+
+    .rp-summary-card .card-body {
+      padding: 0.95rem 1rem;
+    }
+
+    .rp-summary-label {
+      display: block;
+      color: var(--rp-muted);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.35px;
+      font-weight: 700;
+      margin-bottom: 0.38rem;
+    }
+
+    .rp-summary-value {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 800;
+      line-height: 1.1;
+      color: #0b2254;
+    }
+
+    .rp-summary-value.is-danger {
+      color: #dc3545;
+    }
+
+    .rp-table-wrap {
+      overflow: auto;
+      border: 1px solid #d7e2f3;
+      border-radius: 12px;
+      background: #ffffff;
+    }
+
+    .rp-table-wrap .table {
+      margin-bottom: 0;
+      background: #ffffff;
+      min-width: 980px;
+    }
+
+    .rp-table-wrap thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #e8f0ff !important;
+      color: #1e3a8a !important;
+      border-bottom: 1px solid #ccdaf5 !important;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      font-weight: 700;
+      padding: 0.66rem 0.7rem;
+      white-space: nowrap;
+    }
+
+    .rp-table-wrap tbody td {
+      padding: 0.62rem 0.7rem;
+      border-color: #edf2fb;
+      vertical-align: middle;
+    }
+
+    .rp-table-wrap tbody tr:hover td {
+      background: #f7fbff;
+    }
+
+    .rp-table-wrap .table-striped > tbody > tr:nth-of-type(odd) > * {
+      --bs-table-accent-bg: #f9fbff;
+    }
+
+    #paginacionReportes .pagination {
+      margin-bottom: 0;
+    }
+
+    #paginacionReportes .page-link {
+      border-radius: 8px !important;
+      margin-left: 0.2rem;
+      border-color: #d6dfef;
+      color: #1e3a8a;
+    }
+
+    #paginacionReportes .page-item.active .page-link {
+      background: var(--rp-primary);
+      border-color: var(--rp-primary);
+      color: #ffffff;
+    }
+
+    .rp-modal-header {
+      background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+      border-bottom: 1px solid var(--rp-border);
+    }
+
+    .rp-modal-header .modal-title {
+      font-weight: 700;
+      color: #0d2b6f;
+    }
+
+    .rp-modal-card {
+      border: 1px solid var(--rp-border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+    }
+
+    .rp-modal-card .card-body {
+      padding: 0.95rem 1rem;
+    }
+
+    .rp-kpi-list {
+      margin: 0;
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    .rp-kpi-list div {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px dashed #e5ebf7;
+      padding-bottom: 0.18rem;
+      gap: 0.6rem;
+    }
+
+    .rp-kpi-list div:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .rp-kpi-list strong {
+      color: #334155;
+      font-weight: 600;
+      font-size: 0.87rem;
+    }
+
+    .rp-kpi-list span {
+      color: #0f172a;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .rp-kpi-list span.text-danger {
+      color: #dc3545 !important;
+    }
+
+    .rp-kpi-list span.text-success {
+      color: #198754 !important;
+    }
+
+    .rp-modal-table-wrap {
+      border: 1px solid #d7e2f3;
+      border-radius: 10px;
+      overflow: auto;
+    }
+
+    .rp-modal-table-wrap table {
+      margin-bottom: 0;
+    }
+
+    .rp-modal-table-wrap thead th {
+      background: #edf3ff;
+      color: #1e3a8a;
+      border-bottom: 1px solid #d8e3f8;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+      letter-spacing: 0.35px;
+    }
+
+    @keyframes rpIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">LOTIFI</a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="cliente.html">Clientes</a></li>
+          <li class="nav-item"><a class="nav-link" href="lotificaciones.html">Lotificaciones</a></li>
+          <li class="nav-item"><a class="nav-link" href="contratos.html">Contratos</a></li>
+          <li class="nav-item"><a class="nav-link" href="pagos.html">Pagos</a></li>
+          <li class="nav-item"><a class="nav-link" href="deudores.html">Deudores</a></li>
+          <li class="nav-item"><a class="nav-link active" href="reportes.html">Reportes</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-3 px-xl-4 my-4 rp-shell">
+    <div class="rp-hero">
+      <h4 class="rp-title">Reportes</h4>
+      <p class="rp-subtitle">Filtra contratos, revisa resumen financiero y consulta detalle por cliente.</p>
+    </div>
+
+    <div class="card rp-card">
+      <div class="card-body">
+        <span class="rp-section">Filtros de Reporte</span>
+
+        <div class="row g-3 align-items-end">
+          <div class="col-xl-3 col-md-6">
+            <label class="form-label">Cliente</label>
+            <input type="text" class="form-control" id="filtroCliente" placeholder="Nombre o DUI">
+          </div>
+
+          <div class="col-xl-2 col-md-6">
+            <label class="form-label">Codigo de lote</label>
+            <input type="text" class="form-control" id="filtroLote" placeholder="Ej: 001A1">
+          </div>
+
+          <div class="col-xl-2 col-md-6">
+            <label class="form-label">Desde</label>
+            <input type="date" class="form-control" id="filtroDesde">
+          </div>
+
+          <div class="col-xl-2 col-md-6">
+            <label class="form-label">Hasta</label>
+            <input type="date" class="form-control" id="filtroHasta">
+          </div>
+
+          <div class="col-xl-2 col-md-6">
+            <label class="form-label">Estado</label>
+            <select class="form-select" id="filtroEstado">
+              <option value="">Todos</option>
+              <option value="activo">Activo</option>
+              <option value="finalizado">Finalizado</option>
+              <option value="mora">En mora</option>
+            </select>
+          </div>
+
+          <div class="col-xl-1 col-md-6 d-grid">
+            <button class="btn rp-btn-primary w-100" id="btnBuscarReporte" type="button">
+              Buscar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-xl-3 col-md-6">
+        <div class="card rp-summary-card text-center">
+          <div class="card-body">
+            <small class="rp-summary-label">Total Pagado</small>
+            <h5 id="repTotalPagado" class="rp-summary-value">$0.00</h5>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6">
+        <div class="card rp-summary-card text-center">
+          <div class="card-body">
+            <small class="rp-summary-label">Total Pendiente</small>
+            <h5 id="repTotalPendiente" class="rp-summary-value">$0.00</h5>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6">
+        <div class="card rp-summary-card text-center">
+          <div class="card-body">
+            <small class="rp-summary-label">Contratos</small>
+            <h5 id="repTotalContratos" class="rp-summary-value">0</h5>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6">
+        <div class="card rp-summary-card text-center">
+          <div class="card-body">
+            <small class="rp-summary-label">Cuotas en Mora</small>
+            <h5 id="repCuotasMora" class="rp-summary-value is-danger">0</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card rp-card mb-4">
+      <div class="card-body">
+        <span class="rp-section">Resultados</span>
+
+        <div class="rp-table-wrap">
+          <table class="table table-sm table-striped align-middle">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Lote</th>
+                <th>Contrato</th>
+                <th>Fecha</th>
+                <th>Monto</th>
+                <th>Estado</th>
+                <th>Accion</th>
+              </tr>
+            </thead>
+            <tbody id="tablaReportes">
+              <tr>
+                <td colspan="7" class="text-center text-muted">Cargando resultados...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="paginacionReportes" class="mt-3 d-flex justify-content-end"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalDetalleReporte" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header rp-modal-header">
+          <h5 class="modal-title">Detalle del Cliente</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="card rp-modal-card mb-3">
+            <div class="card-body">
+              <span class="rp-section mb-2">Cliente</span>
+              <div><strong>Cliente:</strong> <span id="repClienteNombre"></span></div>
+              <div><strong>DUI:</strong> <span id="repClienteDui"></span></div>
+            </div>
+          </div>
+
+          <div class="card rp-modal-card mb-3">
+            <div class="card-body">
+              <span class="rp-section mb-2">Contrato</span>
+              <div><strong>Lote:</strong> <span id="repLote"></span></div>
+              <div><strong>Plazo:</strong> <span id="repPlazo"></span></div>
+              <div>
+                <strong>Estado:</strong>
+                <span id="repEstadoContrato" class="badge bg-success"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card rp-modal-card mb-3">
+            <div class="card-body">
+              <span class="rp-section mb-2">Resumen Financiero</span>
+
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <div class="rp-kpi-list">
+                    <div><strong>Precio del Lote</strong><span id="resPrecioTotal">$0.00</span></div>
+                    <div><strong>Prima</strong><span id="resPrima">$0.00</span></div>
+                    <div><strong>Monto Financiado</strong><span id="resMontoFinanciado">$0.00</span></div>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="rp-kpi-list">
+                    <div><strong>Capital Pagado</strong><span id="resCapitalPagado">$0.00</span></div>
+                    <div><strong>Interes Pagado</strong><span id="resInteresPagado">$0.00</span></div>
+                    <div><strong>Mora Pagada</strong><span id="resMoraPagada">$0.00</span></div>
+                    <div><strong>Total Abonado (Incluye Prima)</strong><span id="resTotalAbonado">$0.00</span></div>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="rp-kpi-list">
+                    <div><strong>Saldo Pendiente</strong><span id="resSaldoPendiente" class="text-danger">$0.00</span></div>
+                    <div><strong>Saldo Acumulado</strong><span id="resSaldoAcumulado" class="text-success">$0.00</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card rp-modal-card mb-3">
+            <div class="card-body">
+              <span class="rp-section mb-2">Estado de Cuenta</span>
+              <div class="rp-modal-table-wrap">
+                <table class="table table-sm table-bordered">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Vence</th>
+                      <th>Cuota</th>
+                      <th>Pagado</th>
+                      <th>Mora</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tablaEstadoCuentaReporte"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card rp-modal-card">
+            <div class="card-body">
+              <span class="rp-section mb-2">Historial de Pagos</span>
+              <div class="rp-modal-table-wrap">
+                <table class="table table-sm table-striped">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Monto</th>
+                      <th>Forma</th>
+                      <th>Banco</th>
+                      <th>Recibo</th>
+                      <th>Comprobante</th>
+                      <th>Imprimir</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tablaPagosReporte"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button class="btn btn-outline-primary" onclick="abrirModalImpresion()">Imprimir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalImpresion" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header rp-modal-header">
+          <h5 class="modal-title">Opciones de impresion</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="chkEstadoCuenta">
+            <label class="form-check-label">Incluir estado de cuenta</label>
+          </div>
+
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="chkHistorialPagos">
+            <label class="form-check-label">Incluir historial de pagos</label>
+          </div>
+
+          <div class="alert alert-warning mt-3 mb-0">
+            Debe seleccionar al menos una opcion.
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary" onclick="prepararImpresion()">Imprimir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="vistaImpresion">
+    <div class="print-header">
+      <h2>LOTIFI</h2>
+      <p>Reporte de Contrato</p>
+      <hr>
+    </div>
+
+    <section>
+      <h4>Informacion del Cliente</h4>
+      <p>
+        <strong>Cliente:</strong> <span id="printCliente"></span><br>
+        <strong>DUI:</strong> <span id="printDui"></span>
+      </p>
+    </section>
+
+    <section>
+      <h4>Contrato</h4>
+      <p>
+        <strong>Lote:</strong> <span id="printLote"></span><br>
+        <strong>Plazo:</strong> <span id="printPlazo"></span><br>
+        <strong>Estado:</strong> <span id="printEstado"></span>
+      </p>
+    </section>
+
+    <section id="printEstadoCuenta">
+      <h4>Estado de Cuenta</h4>
+      <table class="table table-bordered table-sm">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Vence</th>
+            <th>Cuota</th>
+            <th>Pagado</th>
+            <th>Mora</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="printTablaCuotas"></tbody>
+      </table>
+    </section>
+
+    <section id="printHistorialPagos">
+      <h4>Historial de Pagos</h4>
+      <table class="table table-bordered table-sm">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Monto</th>
+            <th>Forma</th>
+            <th>Banco</th>
+          </tr>
+        </thead>
+        <tbody id="printTablaPagos"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <div class="modal fade" id="modalComprobante" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header rp-modal-header">
+          <h5 class="modal-title">Comprobante de Pago</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body text-center">
+          <img
+            id="imgComprobante"
+            src=""
+            alt="Comprobante"
+            class="img-fluid rounded shadow"
+            style="max-height: 75vh; object-fit: contain;"
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/animaciones-ui.js"></script>
+  <script src="js/lockscreen.js"></script>
+  <script src="js/reportes.js"></script>
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Pagos | Lotifi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --pg-bg: #f4f7fc;
+      --pg-card: #ffffff;
+      --pg-border: #dbe4f2;
+      --pg-text: #0f172a;
+      --pg-muted: #64748b;
+      --pg-primary: #0a4ecb;
+      --pg-primary-soft: #eaf1ff;
+      --pg-shadow: 0 14px 32px rgba(15, 23, 42, 0.09);
+    }
+
+    body {
+      background: radial-gradient(circle at 12% 8%, #eaf2ff 0, var(--pg-bg) 42%);
+      color: var(--pg-text);
+    }
+
+    .pg-shell {
+      width: min(100%, 1600px);
+      animation: pgIn 280ms ease-out;
+    }
+
+    .pg-hero {
+      border: 1px solid var(--pg-border);
+      border-radius: 16px;
+      background: linear-gradient(140deg, #ffffff 0%, #f8fbff 100%);
+      box-shadow: var(--pg-shadow);
+      padding: 1rem 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .pg-title {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .pg-subtitle {
+      margin: 0.35rem 0 0;
+      color: var(--pg-muted);
+      font-size: 0.95rem;
+    }
+
+    .pg-card {
+      border: 1px solid var(--pg-border);
+      border-radius: 16px;
+      box-shadow: var(--pg-shadow);
+      background: var(--pg-card);
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .pg-card .card-body {
+      padding: 1.08rem 1.12rem;
+    }
+
+    .pg-section {
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.55px;
+      color: var(--pg-primary);
+      background: var(--pg-primary-soft);
+      border-radius: 8px;
+      display: inline-block;
+      padding: 0.24rem 0.55rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .pg-table-wrap {
+      overflow: auto;
+      border: 1px solid #d7e2f3;
+      border-radius: 12px;
+      background: #ffffff;
+    }
+
+    .pg-table-wrap .table {
+      margin-bottom: 0;
+      background: #ffffff;
+    }
+
+    .pg-table-wrap thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #e8f0ff !important;
+      color: #1e3a8a !important;
+      border-bottom: 1px solid #ccdaf5 !important;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      font-weight: 700;
+      padding: 0.66rem 0.7rem;
+      white-space: nowrap;
+    }
+
+    .pg-table-wrap tbody td {
+      padding: 0.62rem 0.7rem;
+      border-color: #edf2fb;
+      vertical-align: middle;
+    }
+
+    .pg-table-wrap tbody tr:hover td {
+      background: #f7fbff;
+    }
+
+    .pg-table-wrap .table-striped > tbody > tr:nth-of-type(odd) > * {
+      --bs-table-accent-bg: #f9fbff;
+    }
+
+    .form-control,
+    .form-select,
+    textarea.form-control {
+      border-color: #d8deea;
+      border-radius: 10px;
+      transition: all 160ms ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus,
+    textarea.form-control:focus {
+      border-color: var(--pg-primary);
+      box-shadow: 0 0 0 0.2rem rgba(10, 78, 203, 0.14);
+    }
+
+    .pg-btn-primary {
+      background: var(--pg-primary);
+      border-color: var(--pg-primary);
+      border-radius: 10px;
+      font-weight: 600;
+      transition: transform 140ms ease, box-shadow 140ms ease;
+    }
+
+    .pg-btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(10, 78, 203, 0.24);
+    }
+
+    .pg-submit {
+      min-width: 160px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+
+    .modal-content {
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+    }
+
+    @keyframes pgIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">LOTIFI</a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+        data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="cliente.html">Clientes</a></li>
+          <li class="nav-item"><a class="nav-link" href="lotificaciones.html">Lotificaciones</a></li>
+          <li class="nav-item"><a class="nav-link" href="contratos.html">Contratos</a></li>
+          <li class="nav-item"><a class="nav-link" href="pagos.html">Pagos</a></li>
+          <li class="nav-item"><a class="nav-link" href="deudores.html">Deudores</a></li>
+          <li class="nav-item"><a class="nav-link" href="reportes.html">Reportes</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-3 px-xl-4 mt-4 pg-shell">
+
+    <div class="pg-hero">
+      <h4 class="pg-title">Pagos</h4>
+      <p class="pg-subtitle">Busca cliente o codigo de lote, revisa estado de cuenta y registra pagos individuales o multiples con calculo financiero automatico.</p>
+    </div>
+
+    <div class="card pg-card">
+      <div class="card-body">
+        <span class="pg-section">Busqueda de Cliente</span>
+        <div class="row g-2">
+          <div class="col-md-10">
+            <input id="buscarClientePago" type="text" class="form-control" placeholder="Buscar por nombre o apellido">
+          </div>
+          <div class="col-md-2 d-grid">
+            <button class="btn btn-primary pg-btn-primary" onclick="buscarClientePago()">Buscar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card pg-card">
+      <div class="card-body">
+        <span class="pg-section">Pago Rapido por Codigo de Lote</span>
+
+        <div class="row g-2 align-items-center">
+          <div class="col-md-4">
+            <label class="form-label mb-1">Codigo de lote</label>
+            <input type="text" id="codigoLotePago" class="form-control" placeholder="Ej: 001A1">
+            <div class="form-text">Formato: 001A1 (Lotificacion + Poligono + Lote)</div>
+          </div>
+
+          <div class="col-md-2 d-grid">
+            <button class="btn btn-primary pg-btn-primary" onclick="buscarPorCodigoLote()">Buscar</button>
+          </div>
+        </div>
+
+        <div id="infoPagoRapido" class="mt-3 d-none">
+          <hr class="my-2">
+          <p class="mb-1"><strong>Cliente:</strong> <span id="pagoRapidoCliente"></span></p>
+          <p class="mb-1"><strong>Lote:</strong> <span id="pagoRapidoLote"></span></p>
+          <span class="badge bg-success">Contrato activo encontrado</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card pg-card">
+      <div class="card-body">
+        <span class="pg-section">Resultados de Clientes</span>
+        <div class="pg-table-wrap">
+          <table class="table table-sm table-striped">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>DUI</th>
+                <th>Accion</th>
+              </tr>
+            </thead>
+            <tbody id="tablaResultadosClientePago"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card pg-card">
+      <div class="card-body">
+        <span class="pg-section">Contratos del Cliente</span>
+        <div class="pg-table-wrap">
+          <table class="table table-sm table-striped">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Lote</th>
+                <th>Plazo</th>
+                <th>Estado</th>
+                <th>Accion</th>
+              </tr>
+            </thead>
+            <tbody id="tablaContratosPago"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card pg-card">
+      <div class="card-body">
+        <span class="pg-section">Estado de Cuenta</span>
+        <div id="estadoCuentaLeyenda" class="form-text mb-2">
+          El campo # muestra la cuota o rango exigible segun la fecha de abono.
+        </div>
+        <div class="pg-table-wrap">
+          <table class="table table-bordered table-sm">
+            <thead>
+              <tr>
+                <th>Cuota/Rango</th>
+                <th>Vence</th>
+                <th>Cuota</th>
+                <th>Cargos</th>
+                <th>Estado</th>
+                <th>Total</th>
+                <th>Accion</th>
+              </tr>
+            </thead>
+            <tbody id="tablaEstadoCuenta"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card pg-card">
+      <div class="card-body">
+        <h5 class="mb-3">Registrar Pago</h5>
+
+        <div class="row mb-3 g-3">
+          <div class="col-md-3">
+            <label class="form-label">Cuota/Rango Exigible</label>
+            <input id="pagoNumeroCuota" type="text" class="form-control" disabled>
+            <div id="pagoDetalleRango" class="form-text">
+              Se muestra la cuota pendiente actual o el rango exigible por fecha.
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Vencimiento</label>
+            <input id="pagoVencimiento" type="text" class="form-control" disabled>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Cuota</label>
+            <input id="pagoMontoCuota" type="text" class="form-control" disabled>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Cargos (Mora)</label>
+            <input id="pagoMora" type="text" class="form-control" disabled>
+          </div>
+        </div>
+
+        <form id="formPago">
+          <input type="hidden" id="idCuotaSeleccionada">
+
+          <div class="row mb-3 g-3">
+            <div class="col-md-3">
+              <label class="form-label">Monto Pagado</label>
+              <input id="pagoMonto" type="number" class="form-control" step="0.01" required>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Fecha Abono</label>
+              <input id="pagoFecha" type="date" class="form-control" required>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Forma de Pago</label>
+              <select id="pagoForma" class="form-select" required>
+                <option value="">Seleccione</option>
+                <option>Efectivo</option>
+                <option>Remesa</option>
+                <option>Transferencia</option>
+                <option>Cheque</option>
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Banco</label>
+              <input id="pagoBanco" type="text" class="form-control">
+            </div>
+          </div>
+
+          <div class="row mb-3 g-3">
+            <div class="col-md-4">
+              <label class="form-label">Numero de Recibo</label>
+              <input id="pagoRecibo" type="text" class="form-control" required>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Fecha Recibo</label>
+              <input id="pagoFechaRecibo" type="date" class="form-control" required>
+            </div>
+          </div>
+
+          <button class="btn btn-outline-secondary btn-sm mb-3" disabled id="btnAdjuntarComprobante">
+            Adjuntar Comprobante
+          </button>
+
+          <div class="d-flex justify-content-end">
+            <button type="submit" id="btnRegistrarPago" class="btn btn-success pg-submit" disabled>
+              Registrar Pago
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card pg-card">
+      <div class="card-body">
+        <h5 class="mb-3">Pago Multiple por Rango</h5>
+
+        <div class="alert alert-light border py-2 mb-3">
+          Debe iniciar desde la primera cuota pendiente. No se permiten saltos. Los cargos se calculan automaticamente y la mora se aplica solo a la primera cuota si hay atraso.
+        </div>
+
+        <form id="formPagoMasivo">
+          <div class="row mb-3 g-3">
+            <div class="col-md-3">
+              <label class="form-label">Contrato</label>
+              <input id="pagoMasivoContrato" class="form-control" type="text" readonly>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Cuota Desde</label>
+              <input id="pagoMasivoDesde" class="form-control" type="number" readonly>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Cuota Hasta</label>
+              <input id="pagoMasivoHasta" class="form-control" type="number" min="1" required>
+            </div>
+          </div>
+
+          <div class="row mb-3 g-3">
+            <div class="col-md-6">
+              <label class="form-label">Fecha Abono</label>
+              <input id="pagoMasivoFecha" class="form-control" type="date" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Fecha Recibo</label>
+              <input id="pagoMasivoFechaRecibo" class="form-control" type="date" required>
+            </div>
+          </div>
+
+          <div class="row mb-3 g-3">
+            <div class="col-md-3">
+              <label class="form-label">Forma de Pago</label>
+              <select id="pagoMasivoForma" class="form-select" required>
+                <option value="">Seleccione</option>
+                <option>Efectivo</option>
+                <option>Remesa</option>
+                <option>Transferencia</option>
+                <option>Cheque</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Banco</label>
+              <input id="pagoMasivoBanco" class="form-control" type="text">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Numero de Recibo (base)</label>
+              <input id="pagoMasivoRecibo" class="form-control" type="text" required>
+            </div>
+          </div>
+
+          <div id="resumenPagoMasivo" class="small text-muted mb-3"></div>
+
+          <div class="d-flex justify-content-end">
+            <button id="btnRegistrarPagoMasivo" type="submit" class="btn btn-dark pg-submit" disabled>
+              Registrar Pago Multiple
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <input type="hidden" id="idContratoActivo">
+  </div>
+
+  <div class="modal fade" id="modalComprobante" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Adjuntar Comprobante de Pago</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="alert alert-light border">
+            <strong>Pago ID:</strong> <span id="modalPagoId">-</span><br>
+            <strong>Recibo:</strong> <span id="modalRecibo">-</span>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Seleccionar imagen</label>
+            <input type="file" class="form-control" accept="image/*" id="inputComprobante">
+            <div class="form-text">Se aceptan fotos o capturas de pantalla.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Vista previa</label>
+            <div class="border rounded p-2 text-center">
+              <img id="previewComprobante"
+                src=""
+                alt="Vista previa"
+                class="img-fluid d-none"
+                style="max-height: 300px;">
+              <div id="previewPlaceholder" class="text-muted">
+                (Aqui se mostrara la imagen seleccionada)
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-success" id="btnImprimirRecibo" disabled>
+            Imprimir comprobante
+          </button>
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary" onclick="subirComprobante(idPagoActual)">
+            Subir Comprobante
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/animaciones-ui.js"></script>
+  <script src="js/lockscreen.js"></script>
+  <script src="js/pagos.js"></script>
+</body>
+</html>

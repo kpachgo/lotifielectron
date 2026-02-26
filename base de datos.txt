@@ -1,0 +1,156 @@
+primero te pasare la base de datos completa de como la tengo estructurada:
+CREATE TABLE `cliente` (
+  `id_cliente` int NOT NULL AUTO_INCREMENT,
+  `nombres` varchar(100) NOT NULL,
+  `apellidos` varchar(100) DEFAULT NULL,
+  `dui` varchar(15) DEFAULT NULL,
+  `telefono` varchar(50) DEFAULT NULL,
+  `direccion` varchar(250) DEFAULT NULL,
+  `nit` varchar(20) DEFAULT NULL,
+  PRIMARY KEY (`id_cliente`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `contratos` (
+  `id_contrato` int NOT NULL AUTO_INCREMENT,
+  `id_cliente` int NOT NULL,
+  `id_lote` int NOT NULL,
+  `precio_total` decimal(10,2) NOT NULL,
+  `prima` decimal(10,2) DEFAULT '0.00',
+  `monto_financiado` decimal(10,2) NOT NULL,
+  `plazo_meses` int NOT NULL,
+  `cuota` decimal(10,2) DEFAULT NULL,
+  `fecha_inicio` date NOT NULL,
+  `fecha_vencimiento` date NOT NULL,
+  `estado` enum('activo','vencido','cancelado') DEFAULT 'activo',
+  `factor_usado` decimal(10,2) DEFAULT NULL,
+  PRIMARY KEY (`id_contrato`),
+  KEY `id_cliente` (`id_cliente`),
+  KEY `id_lote` (`id_lote`),
+  CONSTRAINT `contratos_ibfk_1` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`),
+  CONSTRAINT `contratos_ibfk_2` FOREIGN KEY (`id_lote`) REFERENCES `lotes` (`id_lote`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `cuotas` (
+  `id_cuota` int NOT NULL AUTO_INCREMENT,
+  `id_contrato` int NOT NULL,
+  `numero_cuota` int NOT NULL,
+  `fecha_vencimiento` date NOT NULL,
+  `monto_cuota` decimal(10,2) NOT NULL,
+  `estado` enum('pendiente','pagada','atrasada') DEFAULT 'pendiente',
+  PRIMARY KEY (`id_cuota`),
+  KEY `id_contrato` (`id_contrato`),
+  CONSTRAINT `cuotas_ibfk_1` FOREIGN KEY (`id_contrato`) REFERENCES `contratos` (`id_contrato`)
+) ENGINE=InnoDB AUTO_INCREMENT=601 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `documentos` (
+  `id_documento` int NOT NULL AUTO_INCREMENT,
+  `id_pago` int NOT NULL,
+  `tipo_documento` varchar(50) NOT NULL,
+  `ruta_archivo` varchar(255) NOT NULL,
+  `fecha_subida` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_documento`),
+  KEY `id_pago` (`id_pago`),
+  CONSTRAINT `documentos_ibfk_1` FOREIGN KEY (`id_pago`) REFERENCES `pagos` (`id_pago`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `gastos` (
+  `id_gasto` int NOT NULL AUTO_INCREMENT,
+  `id_contrato` int NOT NULL,
+  `concepto` varchar(100) NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `fecha` date NOT NULL,
+  PRIMARY KEY (`id_gasto`),
+  KEY `id_contrato` (`id_contrato`),
+  CONSTRAINT `gastos_ibfk_1` FOREIGN KEY (`id_contrato`) REFERENCES `contratos` (`id_contrato`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `historial_lote` (
+  `id_historial` int NOT NULL AUTO_INCREMENT,
+  `id_lotificacion` int NOT NULL,
+  `id_poligono` int NOT NULL,
+  `id_lote` int NOT NULL,
+  `id_cliente` int DEFAULT NULL,
+  `id_contrato` int DEFAULT NULL,
+  `precio_lote` decimal(10,2) NOT NULL,
+  `prima` decimal(10,2) NOT NULL,
+  `monto_financiado` decimal(10,2) NOT NULL,
+  `cuota_mensual` decimal(10,2) NOT NULL,
+  `plazo_meses` int NOT NULL,
+  `letra_corrida` decimal(10,2) NOT NULL,
+  `interes_mensual` decimal(5,2) DEFAULT NULL,
+  `interes_mora` decimal(5,2) DEFAULT NULL,
+  `fecha_inicio` date DEFAULT NULL,
+  `estado` enum('activo','finalizado','cancelado') DEFAULT 'activo',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_historial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `lotes` (
+  `id_lote` int NOT NULL AUTO_INCREMENT,
+  `id_poligono` int NOT NULL,
+  `numero_lote` varchar(20) NOT NULL,
+  `area` decimal(10,2) DEFAULT NULL,
+  `precio_base` decimal(10,2) DEFAULT NULL,
+  `estado` enum('disponible','vendido') DEFAULT 'disponible',
+  `unidad_area` enum('m2','v2') DEFAULT NULL,
+  `precio` decimal(10,0) DEFAULT NULL,
+  PRIMARY KEY (`id_lote`),
+  KEY `id_poligono` (`id_poligono`),
+  CONSTRAINT `lotes_ibfk_1` FOREIGN KEY (`id_poligono`) REFERENCES `poligonos` (`id_poligono`)
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `lotificaciones` (
+  `id_lotificacion` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `ubicacion` varchar(200) DEFAULT NULL,
+  `descripcion` text,
+  PRIMARY KEY (`id_lotificacion`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `mora` (
+  `id_mora` int NOT NULL AUTO_INCREMENT,
+  `id_cuota` int NOT NULL,
+  `dias_atraso` int NOT NULL,
+  `monto_mora` decimal(10,2) NOT NULL,
+  `fecha_calculo` date NOT NULL,
+  PRIMARY KEY (`id_mora`),
+  KEY `id_cuota` (`id_cuota`),
+  CONSTRAINT `mora_ibfk_1` FOREIGN KEY (`id_cuota`) REFERENCES `cuotas` (`id_cuota`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `pagos` (
+  `id_pago` int NOT NULL AUTO_INCREMENT,
+  `id_cuota` int NOT NULL,
+  `fecha_abono` date NOT NULL,
+  `fecha_recibo` date NOT NULL,
+  `forma_pago` enum('Efectivo','Remesa','Transferencia','Cheque') NOT NULL,
+  `banco` varchar(100) DEFAULT NULL,
+  `abono_capital` decimal(10,2) NOT NULL,
+  `abono_interes` decimal(10,2) NOT NULL,
+  `monto_total` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`id_pago`),
+  KEY `id_cuota` (`id_cuota`),
+  CONSTRAINT `pagos_ibfk_1` FOREIGN KEY (`id_cuota`) REFERENCES `cuotas` (`id_cuota`)
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `poligonos` (
+  `id_poligono` int NOT NULL AUTO_INCREMENT,
+  `id_lotificacion` int NOT NULL,
+  `nombre_poligono` varchar(50) NOT NULL,
+  PRIMARY KEY (`id_poligono`),
+  KEY `id_lotificacion` (`id_lotificacion`),
+  CONSTRAINT `poligonos_ibfk_1` FOREIGN KEY (`id_lotificacion`) REFERENCES `lotificaciones` (`id_lotificacion`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `recibos` (
+  `id_recibo` int NOT NULL AUTO_INCREMENT,
+  `id_pago` int NOT NULL,
+  `numero_recibo` varchar(30) NOT NULL,
+  `fecha_emision` date NOT NULL,
+  `estado` enum('emitido','cancelado') DEFAULT 'emitido',
+  PRIMARY KEY (`id_recibo`),
+  KEY `id_pago` (`id_pago`),
+  CONSTRAINT `recibos_ibfk_1` FOREIGN KEY (`id_pago`) REFERENCES `pagos` (`id_pago`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `reservas` (
+  `id_reserva` int NOT NULL AUTO_INCREMENT,
+  `id_lote` int NOT NULL,
+  `id_cliente` int NOT NULL,
+  `fecha_reserva` date NOT NULL,
+  `fecha_expiracion` date NOT NULL,
+  `estado` enum('activa','cancelada','convertida') DEFAULT 'activa',
+  PRIMARY KEY (`id_reserva`),
+  KEY `id_lote` (`id_lote`),
+  KEY `id_cliente` (`id_cliente`),
+  CONSTRAINT `reservas_ibfk_1` FOREIGN KEY (`id_lote`) REFERENCES `lotes` (`id_lote`),
+  CONSTRAINT `reservas_ibfk_2` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

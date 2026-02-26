@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cargando LotifiElectron</title>
+  <style>
+    :root {
+      --bg-1: #0b1320;
+      --bg-2: #182131;
+      --text: #e5ecf6;
+      --muted: #afbdd1;
+      --line: #2a3a52;
+      --brand: #79b8ff;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 10%, #243654 0%, transparent 55%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2));
+    }
+
+    .card {
+      width: min(440px, 92vw);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(8, 12, 18, 0.72);
+      backdrop-filter: blur(4px);
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    .logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      padding: 4px;
+      background: #111b2c;
+      object-fit: contain;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      line-height: 1.2;
+    }
+
+    p {
+      margin: 4px 0 0;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .loader {
+      margin-top: 12px;
+      width: 180px;
+      height: 3px;
+      border-radius: 999px;
+      background: #1f2b3e;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .loader::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      width: 40%;
+      background: linear-gradient(90deg, transparent, var(--brand), transparent);
+      animation: slide 1.2s infinite;
+    }
+
+    @keyframes slide {
+      from { transform: translateX(-100%); }
+      to { transform: translateX(350%); }
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <img class="logo" src="../Lotificacion.ico" alt="Lotifi" />
+    <section>
+      <h1>LotifiElectron</h1>
+      <p>Iniciando sistema de lotificacion...</p>
+      <div class="loader" aria-hidden="true"></div>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Clientes | Lotifi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+  <style>
+    :root {
+      --cliente-bg: #f6f7fb;
+      --cliente-card: #ffffff;
+      --cliente-border: #e6eaf2;
+      --cliente-text: #0f172a;
+      --cliente-muted: #64748b;
+      --cliente-primary: #0b57d0;
+      --cliente-primary-soft: #eaf1ff;
+      --cliente-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    body {
+      background: radial-gradient(circle at 10% 10%, #eef4ff 0%, var(--cliente-bg) 40%);
+      color: var(--cliente-text);
+    }
+
+    .cliente-shell {
+      width: min(100%, 1600px);
+      animation: shellIn 300ms ease-out;
+    }
+
+    .cliente-hero {
+      border: 1px solid var(--cliente-border);
+      border-radius: 16px;
+      background: linear-gradient(135deg, #ffffff 0%, #f7faff 100%);
+      box-shadow: var(--cliente-shadow);
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .cliente-title {
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .cliente-subtitle {
+      margin: 0.2rem 0 0;
+      color: var(--cliente-muted);
+      font-size: 0.95rem;
+    }
+
+    .cliente-card {
+      border: 1px solid var(--cliente-border);
+      border-radius: 16px;
+      box-shadow: var(--cliente-shadow);
+      background: var(--cliente-card);
+      overflow: hidden;
+      animation: cardIn 320ms ease-out;
+    }
+
+    .cliente-card .card-body {
+      padding: 1.15rem 1.2rem;
+    }
+
+    .cliente-section-title {
+      font-size: 0.86rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.55px;
+      color: var(--cliente-primary);
+      background: var(--cliente-primary-soft);
+      border-radius: 8px;
+      display: inline-block;
+      padding: 0.25rem 0.55rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .form-control, .form-select, textarea.form-control {
+      border-color: #d8deea;
+      border-radius: 10px;
+      transition: all 160ms ease;
+    }
+
+    .form-control:focus, .form-select:focus, textarea.form-control:focus {
+      border-color: var(--cliente-primary);
+      box-shadow: 0 0 0 0.2rem rgba(11, 87, 208, 0.15);
+    }
+
+    .cliente-actions {
+      gap: 0.5rem;
+    }
+
+    .btn-cliente-primary {
+      background: var(--cliente-primary);
+      border-color: var(--cliente-primary);
+      min-width: 150px;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: transform 140ms ease, box-shadow 140ms ease;
+    }
+
+    .btn-cliente-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 16px rgba(11, 87, 208, 0.24);
+    }
+
+    .btn-cliente-ghost {
+      border-radius: 10px;
+    }
+
+    .table thead.table-dark th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    #tablaClientes tr {
+      animation: rowIn 220ms ease-out;
+    }
+
+    #tablaClientes tr:hover td {
+      background: #f8fbff;
+    }
+
+    @keyframes shellIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes rowIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">LOTIFI</a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+        data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="cliente.html">Clientes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="lotificaciones.html">Lotificaciones</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="contratos.html">Contratos</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="pagos.html">Pagos</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="deudores.html">Deudores</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="reportes.html">Reportes</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-3 px-xl-4 mt-4 cliente-shell">
+
+    <div class="cliente-hero">
+      <h4 class="cliente-title">Registro de Cliente</h4>
+      <p class="cliente-subtitle">
+        Completa la informacion basica del cliente para habilitar contratos y pagos.
+      </p>
+    </div>
+
+    <div class="row">
+      <div class="col-md-12">
+
+        <div class="card cliente-card">
+          <div class="card-body">
+            <div id="mensajeCliente"></div>
+            <form id="formCliente">
+
+              <div class="cliente-section-title">Datos Personales</div>
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Nombres</label>
+                  <input type="text" class="form-control" id="nombres" required placeholder="Nombres de Cliente">
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Apellidos</label>
+                  <input type="text" class="form-control" id="apellidos" required placeholder="Apellidos del Cliente">
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label class="form-label">DUI</label>
+                  <input type="text" class="form-control" id="dui" required maxlength="10"
+                    placeholder="00000000-0">
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">NIT</label>
+                  <input type="text" class="form-control" id="nit" maxlength="19"
+                    placeholder="0000-000000-000-0">
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">Telefono</label>
+                  <input type="text" class="form-control" id="telefono" placeholder="XXXX-XXXX">
+                </div>
+              </div>
+
+              <div class="cliente-section-title">Contacto</div>
+              <div class="mb-3">
+                <label class="form-label">Direccion</label>
+                <textarea class="form-control" id="direccion" rows="2" required placeholder="Direccion donde vive"></textarea>
+              </div>
+
+              <div class="d-flex justify-content-end cliente-actions">
+                <button type="reset" class="btn btn-outline-secondary btn-cliente-ghost">
+                  Limpiar
+                </button>
+                <button type="submit" class="btn btn-primary btn-cliente-primary">
+                  Guardar Cliente
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="row mt-5">
+      <div class="col-md-12">
+        <h5>Listado de Clientes</h5>
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <input
+              type="text"
+              id="buscadorCliente"
+              class="form-control"
+              placeholder="Buscar cliente por nombre..."
+            >
+          </div>
+        </div>
+
+        <div class="card cliente-card">
+          <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 430px;">
+              <table class="table table-striped mb-0">
+                <thead class="table-dark">
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>DUI</th>
+                    <th>Telefono</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaClientes">
+                  <!-- luego se llena con JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div id="paginacionClientes" class="mt-3 d-flex justify-content-end"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+  </script>
+  <script src="js/animaciones-ui.js"></script>
+  <script src="js/lockscreen.js"></script>
+  <script src="js/cliente.js"></script>
+</body>
+</html>
+
+

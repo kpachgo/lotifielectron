@@ -1,0 +1,68 @@
+{
+  "name": "lotifielectron",
+  "version": "1.0.1",
+  "description": "LotifiElectron desktop app",
+  "author": "German Manuel Ortiz <gkpach.go@gmail.com>",
+  "main": "electron/main.js",
+  "scripts": {
+    "electron": "electron .",
+    "start": "npm run electron",
+    "dist:win": "electron-builder --win nsis"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "electron-updater": "^6.3.9",
+    "express": "^4.19.2",
+    "multer": "^2.0.2",
+    "mysql2": "^3.9.7"
+  },
+  "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.kpachgo.lotifielectron",
+    "productName": "LotifiElectron",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "frontend/**/*",
+      "backend/**/*",
+      "Lotificacion.ico",
+      "package.json"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "backend/uploads/**"
+    ],
+    "win": {
+      "icon": "Lotificacion.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "installerIcon": "Lotificacion.ico",
+      "uninstallerIcon": "Lotificacion.ico",
+      "installerHeaderIcon": "Lotificacion.ico",
+      "shortcutName": "LotifiElectron",
+      "artifactName": "LotifiElectron-Setup-${version}.exe"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "kpachgo",
+      "repo": "lotifielectron"
+    }
+  }
+}

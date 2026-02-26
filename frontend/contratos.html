@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Contratos | Lotifi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --ct-bg: #f4f7fc;
+      --ct-card: #ffffff;
+      --ct-border: #dde6f2;
+      --ct-text: #0f172a;
+      --ct-muted: #64748b;
+      --ct-primary: #0a4ecb;
+      --ct-primary-soft: #eaf1ff;
+      --ct-shadow: 0 14px 32px rgba(15, 23, 42, 0.09);
+    }
+
+    body {
+      background: radial-gradient(circle at 12% 8%, #eaf2ff 0, var(--ct-bg) 42%);
+      color: var(--ct-text);
+    }
+
+    .ct-shell {
+      width: min(100%, 1600px);
+      animation: ctIn 280ms ease-out;
+    }
+
+    .ct-hero {
+      border: 1px solid var(--ct-border);
+      border-radius: 16px;
+      background: linear-gradient(140deg, #ffffff 0%, #f8fbff 100%);
+      box-shadow: var(--ct-shadow);
+      padding: 1rem 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .ct-title {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .ct-subtitle {
+      margin: 0.35rem 0 0;
+      color: var(--ct-muted);
+      font-size: 0.95rem;
+    }
+
+    .ct-card {
+      border: 1px solid var(--ct-border);
+      border-radius: 16px;
+      box-shadow: var(--ct-shadow);
+      background: var(--ct-card);
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .ct-card .card-body {
+      padding: 1.1rem 1.15rem;
+    }
+
+    .ct-section {
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.55px;
+      color: var(--ct-primary);
+      background: var(--ct-primary-soft);
+      border-radius: 8px;
+      display: inline-block;
+      padding: 0.24rem 0.55rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .ct-table-wrap {
+      max-height: 280px;
+      overflow: auto;
+    }
+
+    .ct-table-wrap thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .ct-results-table thead th {
+      background: #dfeafb !important;
+      color: #123a7a !important;
+      border-bottom: 1px solid #c9d9f4 !important;
+      font-weight: 700;
+    }
+
+    .table tbody tr:hover td {
+      background: #f8fbff;
+    }
+
+    .form-control,
+    .form-select,
+    textarea.form-control {
+      border-color: #d8deea;
+      border-radius: 10px;
+      transition: all 160ms ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus,
+    textarea.form-control:focus {
+      border-color: var(--ct-primary);
+      box-shadow: 0 0 0 0.2rem rgba(10, 78, 203, 0.14);
+    }
+
+    .ct-btn-primary {
+      background: var(--ct-primary);
+      border-color: var(--ct-primary);
+      border-radius: 10px;
+      font-weight: 600;
+      transition: transform 140ms ease, box-shadow 140ms ease;
+    }
+
+    .ct-btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(10, 78, 203, 0.24);
+    }
+
+    .ct-submit {
+      min-width: 170px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .modal-content {
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+    }
+
+    @keyframes ctIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">LOTIFI</a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+        data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="cliente.html">Clientes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="lotificaciones.html">Lotificaciones</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="contratos.html">Contratos</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="pagos.html">Pagos</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="deudores.html">Deudores</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="reportes.html">Reportes</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-3 px-xl-4 mt-4 ct-shell">
+
+    <div class="ct-hero">
+      <h4 class="ct-title">Contratos</h4>
+      <p class="ct-subtitle">Busca cliente, revisa contratos existentes y crea nuevos planes de financiamiento.</p>
+    </div>
+
+    <div class="card ct-card">
+      <div class="card-body">
+        <span class="ct-section">Busqueda de Cliente</span>
+
+        <div class="row g-2">
+          <div class="col-md-10">
+            <input id="buscarClienteInput" type="text" class="form-control" placeholder="Buscar por nombre o apellido">
+          </div>
+          <div class="col-md-2 d-grid">
+            <button class="btn btn-primary ct-btn-primary" onclick="buscarCliente()">Buscar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card ct-card">
+      <div class="card-body">
+        <span class="ct-section">Resultados</span>
+
+        <div class="ct-table-wrap">
+          <table class="table table-sm table-striped mb-0 ct-results-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>DUI</th>
+                <th>Accion</th>
+              </tr>
+            </thead>
+            <tbody id="tablaResultadosCliente"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card ct-card">
+      <div class="card-body">
+
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <h5 class="mb-0">Crear Nuevo Contrato</h5>
+          <span class="badge text-bg-primary">Cuota automatica PMT</span>
+        </div>
+
+        <form id="formContrato">
+
+          <span class="ct-section">Cliente</span>
+          <div class="mb-3">
+            <label class="form-label">Cliente Seleccionado</label>
+            <input
+              type="text"
+              id="clienteSeleccionado"
+              class="form-control"
+              placeholder="Seleccione un cliente desde la busqueda"
+              disabled
+            >
+            <input type="hidden" id="idClienteSeleccionado">
+          </div>
+
+          <span class="ct-section">Financiamiento</span>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Tipo de Financiamiento</label>
+
+              <div class="form-check">
+                <input class="form-check-input" type="radio"
+                  name="tipoFinanciamiento"
+                  id="tipoInteresSaldo"
+                  value="interes_saldo"
+                  checked>
+                <label class="form-check-label" for="tipoInteresSaldo">
+                  Interes sobre saldo (amortizacion mensual)
+                </label>
+              </div>
+
+              <div class="form-check">
+                <input class="form-check-input" type="radio"
+                  name="tipoFinanciamiento"
+                  id="tipoPenalizacion"
+                  value="penalizacion_fija">
+                <label class="form-check-label" for="tipoPenalizacion">
+                  Penalizacion fija por cuota vencida
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-3" id="configInteresSaldo">
+            <div class="col-md-4">
+              <label class="form-label">Tasa Interes Anual (%)</label>
+              <input type="number" id="tasaInteresAnual"
+                class="form-control"
+                step="0.01"
+                value="16">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Dias de Gracia</label>
+              <input type="number" id="diasGracia"
+                class="form-control"
+                value="0">
+            </div>
+          </div>
+
+          <div class="row mb-3 d-none" id="configPenalizacion">
+            <div class="col-md-4">
+              <label class="form-label">Penalizacion por cuota ($)</label>
+              <input type="number" id="penalizacionFija"
+                class="form-control"
+                value="50">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Dias de Gracia</label>
+              <input type="number" id="diasGraciaPenal"
+                class="form-control"
+                value="3">
+            </div>
+          </div>
+
+          <span class="ct-section">Lote</span>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Lotificacion</label>
+              <select id="selectLotificacion" class="form-select">
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Poligono</label>
+              <select id="selectPoligono" class="form-select" required>
+                <option value="">Seleccione</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Lote</label>
+              <select id="selectLote" class="form-select" required>
+                <option value="">Seleccione</option>
+              </select>
+            </div>
+          </div>
+
+          <span class="ct-section">Parametros Financieros</span>
+          <div class="row mb-3 g-3">
+            <div class="col-md-3">
+              <label class="form-label">Precio Base del Lote</label>
+              <input
+                type="number"
+                id="precioTotal"
+                class="form-control"
+                required
+              >
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Prima</label>
+              <input
+                type="number"
+                id="prima"
+                class="form-control"
+                value="0"
+              >
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Monto Financiado</label>
+              <input
+                type="number"
+                id="montoFinanciado"
+                class="form-control"
+                disabled
+              >
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Cuota Mensual</label>
+              <input type="number" id="cuotaMensual" class="form-control" step="0.01" min="0" readonly>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Precio Final (con intereses)</label>
+              <input
+                type="text"
+                id="precioFinal"
+                class="form-control"
+                disabled
+              >
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Plazo (meses)</label>
+              <input
+                type="number"
+                id="plazoMeses"
+                class="form-control"
+                required
+              >
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Fecha Inicio</label>
+              <input
+                type="date"
+                id="fechaInicio"
+                class="form-control"
+                required
+              >
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-success ct-submit">
+              Crear Contrato
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div class="modal fade" id="modalSinContratos">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Contratos</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center">
+          <p class="text-muted">Este cliente no tiene contratos registrados.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalContratos">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Contratos del Cliente</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <table class="table table-sm table-bordered">
+            <thead class="table-dark">
+              <tr>
+                <th>ID</th>
+                <th>Lote</th>
+                <th>Precio</th>
+                <th>Plazo</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="tablaContratosModal"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/animaciones-ui.js"></script>
+  <script src="js/lockscreen.js"></script>
+  <script src="js/contratos.js"></script>
+</body>
+</html>
