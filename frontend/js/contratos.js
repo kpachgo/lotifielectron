@@ -317,18 +317,22 @@ document.getElementById('prima')
   // ===============================
   const tipoInteres = document.getElementById('tipoInteresSaldo');
   const tipoPenal = document.getElementById('tipoPenalizacion');
+  const tipoSinInteres = document.getElementById('tipoSinInteres');
 
   tipoInteres.addEventListener('change', toggleTipo);
   tipoPenal.addEventListener('change', toggleTipo);
+  tipoSinInteres.addEventListener('change', toggleTipo);
 
   function toggleTipo() {
-    const interes = tipoInteres.checked;
+    const tipo = document.querySelector('input[name="tipoFinanciamiento"]:checked')?.value || 'interes_saldo';
+    const interes = tipo === 'interes_saldo';
+    const penalizacion = tipo === 'penalizacion_fija';
 
     document.getElementById('configInteresSaldo')
       .classList.toggle('d-none', !interes);
 
     document.getElementById('configPenalizacion')
-      .classList.toggle('d-none', interes);
+      .classList.toggle('d-none', !penalizacion);
 
     recalcularCuotaAutomatica();
   }
@@ -370,9 +374,11 @@ document.getElementById('prima')
             ? Number(document.getElementById('penalizacionFija').value)
             : null,
         dias_gracia:
-          tipoFinanciamiento === 'interes_saldo'
-            ? Number(document.getElementById('diasGracia').value)
-            : Number(document.getElementById('diasGraciaPenal').value)
+          tipoFinanciamiento === 'sin_interes'
+            ? 0
+            : tipoFinanciamiento === 'interes_saldo'
+              ? Number(document.getElementById('diasGracia').value)
+              : Number(document.getElementById('diasGraciaPenal').value)
       };
 
       if (!data.id_cliente || !data.id_lote) {

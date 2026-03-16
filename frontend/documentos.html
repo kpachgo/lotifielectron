@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentos | Lotifi</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+  <style>
+    :root {
+      --doc-bg: #f3f7ff;
+      --doc-card: #ffffff;
+      --doc-border: #dbe4f4;
+      --doc-text: #0f172a;
+      --doc-muted: #64748b;
+      --doc-primary: #0a4ecb;
+      --doc-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 10% 10%, #eaf1ff 0%, var(--doc-bg) 40%),
+        linear-gradient(180deg, #f8fbff 0%, #f2f6ff 100%);
+      color: var(--doc-text);
+    }
+
+    .doc-shell {
+      width: min(100%, 1600px);
+      animation: docIn 280ms ease-out;
+    }
+
+    .doc-card {
+      border: 1px solid var(--doc-border);
+      border-radius: 14px;
+      background: var(--doc-card);
+      box-shadow: var(--doc-shadow);
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+
+    .doc-card .card-body {
+      padding: 1rem 1.05rem;
+    }
+
+    .doc-title {
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .doc-subtitle {
+      margin-top: 0.3rem;
+      color: var(--doc-muted);
+      font-size: 0.94rem;
+    }
+
+    .doc-table-wrap {
+      overflow: auto;
+      border: 1px solid #d7e2f3;
+      border-radius: 10px;
+    }
+
+    .doc-table-wrap table {
+      margin-bottom: 0;
+    }
+
+    .doc-table-wrap thead th {
+      background: #e9f0ff;
+      color: #1f3b8c;
+      border-bottom: 1px solid #d3def5;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.35px;
+    }
+
+    .doc-viewer {
+      min-height: 64vh;
+      background: #f8fafc;
+      border: 1px solid #dbe4f4;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .doc-viewer iframe,
+    .doc-viewer img {
+      width: 100%;
+      height: 64vh;
+      border: 0;
+      object-fit: contain;
+      background: #fff;
+    }
+
+    @keyframes docIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">LOTIFI</a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="cliente.html">Clientes</a></li>
+          <li class="nav-item"><a class="nav-link" href="lotificaciones.html">Lotificaciones</a></li>
+          <li class="nav-item"><a class="nav-link" href="contratos.html">Contratos</a></li>
+          <li class="nav-item"><a class="nav-link" href="pagos.html">Pagos</a></li>
+          <li class="nav-item"><a class="nav-link" href="deudores.html">Deudores</a></li>
+          <li class="nav-item"><a class="nav-link active" href="documentos.html">Documentos</a></li>
+          <li class="nav-item"><a class="nav-link" href="reportes.html">Reportes</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-3 px-xl-4 mt-4 doc-shell">
+    <div class="doc-card">
+      <div class="card-body">
+        <h4 class="doc-title">Documentos de Cliente</h4>
+        <p class="doc-subtitle">
+          Selecciona un cliente, adjunta PDF o imagenes y consulta sus documentos. Este modulo no muestra comprobantes.
+        </p>
+      </div>
+    </div>
+
+    <div id="mensajeDocumentos"></div>
+
+    <div class="doc-card">
+      <div class="card-body">
+        <div class="row g-2">
+          <div class="col-md-10">
+            <input id="buscarClienteDoc" type="text" class="form-control" placeholder="Buscar cliente por nombre, apellido, DUI o ID">
+          </div>
+          <div class="col-md-2 d-grid">
+            <button id="btnBuscarClienteDoc" type="button" class="btn btn-primary">Buscar</button>
+          </div>
+        </div>
+
+        <div class="doc-table-wrap mt-3">
+          <table class="table table-sm table-striped">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>DUI</th>
+                <th>Accion</th>
+              </tr>
+            </thead>
+            <tbody id="tablaClientesDoc"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-card">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-8">
+            <div class="border rounded p-3 h-100">
+              <div class="small text-muted mb-1">Cliente seleccionado</div>
+              <div id="clienteSeleccionadoDoc" class="fw-semibold">Ninguno</div>
+              <div id="clienteSeleccionadoMetaDoc" class="small text-muted"></div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Filtrar listado por contrato</label>
+            <select id="filtroContratoDoc" class="form-select" disabled>
+              <option value="">Todos los contratos</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-card">
+      <div class="card-body">
+        <form id="formDocumentoCliente">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Vincular a contrato (opcional)</label>
+              <select id="docContratoVinculo" class="form-select" disabled>
+                <option value="">Sin contrato especifico</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Tipo de documento</label>
+              <select id="docTipo" class="form-select" required>
+                <option value="contrato">Contrato</option>
+                <option value="dui">DUI</option>
+                <option value="nit">NIT</option>
+                <option value="foto_cliente">Foto cliente</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+            <div class="col-md-5">
+              <label class="form-label">Archivo</label>
+              <input id="docArchivo" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
+              <div class="form-text">Formatos: PDF, JPG, JPEG, PNG.</div>
+            </div>
+          </div>
+
+          <div class="row g-3 mt-1" id="docDescripcionWrap" style="display:none;">
+            <div class="col-md-12">
+              <label class="form-label">Descripcion (tipo Otro)</label>
+              <input id="docDescripcion" type="text" class="form-control" maxlength="255" placeholder="Ejemplo: constancia laboral">
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end mt-3">
+            <button type="submit" class="btn btn-success">Subir Documento</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="doc-card">
+      <div class="card-body">
+        <h6 class="mb-3">Listado de documentos</h6>
+        <div class="doc-table-wrap">
+          <table class="table table-sm table-hover">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Descripcion</th>
+                <th>Contrato</th>
+                <th>Archivo</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaDocumentosCliente"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalVerDocumento" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Vista de Documento</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="doc-viewer">
+            <iframe id="visorPdfDoc" title="Visor PDF" style="display:none;"></iframe>
+            <img id="visorImagenDoc" alt="Vista documento" style="display:none;">
+            <div id="visorVacioDoc" class="text-muted">No se pudo previsualizar el documento.</div>
+          </div>
+          <div class="mt-2 text-end">
+            <a id="linkAbrirDocumento" href="#" target="_blank" rel="noopener">Abrir en nueva pestana</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/animaciones-ui.js"></script>
+  <script src="js/lockscreen.js"></script>
+  <script src="js/documentos.js"></script>
+</body>
+</html>

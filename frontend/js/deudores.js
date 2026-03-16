@@ -64,8 +64,10 @@ function renderDeudores(lista) {
 
     const badgeTipo =
       item.tipo_financiamiento === 'interes_saldo'
-        ? '<span class="badge bg-primary">Interés</span>'
-        : '<span class="badge bg-info text-dark">Penalización</span>';
+        ? '<span class="badge bg-primary">Inter&#233;s</span>'
+        : item.tipo_financiamiento === 'penalizacion_fija'
+          ? '<span class="badge bg-info text-dark">Penalizaci&#243;n</span>'
+          : '<span class="badge bg-secondary">Sin inter&#233;s</span>';
 
     tbody.innerHTML += `
       <tr>

@@ -25,8 +25,22 @@ exports.obtenerReporteContratos = async (req, res) => {
     }
 
     if (lote) {
-      whereContratos += ' AND l.numero_lote LIKE ?';
-      paramsContratos.push(`%${lote}%`);
+      const loteTexto = String(lote).trim().toUpperCase().replace(/\s+/g, '');
+      whereContratos += `
+        AND (
+          CAST(l.numero_lote AS CHAR) LIKE ?
+          OR CONCAT(
+            LPAD(lo.id_lotificacion, 3, '0'),
+            REPLACE(
+              REPLACE(
+                REPLACE(UPPER(TRIM(p.nombre_poligono)), 'POL.', ''),
+              'POL', ''),
+            ' ', ''),
+            l.numero_lote
+          ) LIKE ?
+        )
+      `;
+      paramsContratos.push(`%${loteTexto}%`, `%${loteTexto}%`);
     }
 
     if (desde) {
@@ -40,8 +54,27 @@ exports.obtenerReporteContratos = async (req, res) => {
     }
 
     if (estado) {
-      whereContratos += ' AND co.estado = ?';
-      paramsContratos.push(estado.toLowerCase());
+      const estadoNormalizado = String(estado).trim().toLowerCase();
+
+      if (estadoNormalizado === 'mora') {
+        whereContratos += `
+          AND co.tipo_financiamiento <> 'sin_interes'
+          AND EXISTS (
+            SELECT 1
+            FROM cuotas cu_mora
+            WHERE cu_mora.id_contrato = co.id_contrato
+              AND cu_mora.capital_pendiente > 0
+              AND cu_mora.estado IN ('pendiente', 'atrasada')
+              AND DATEDIFF(CURDATE(), cu_mora.fecha_vencimiento) > IFNULL(co.dias_gracia, 0)
+          )
+        `;
+      } else if (estadoNormalizado === 'finalizado') {
+        whereContratos += ' AND co.estado = ?';
+        paramsContratos.push('cancelado');
+      } else {
+        whereContratos += ' AND co.estado = ?';
+        paramsContratos.push(estadoNormalizado);
+      }
     }
 
     // =========================
@@ -116,20 +149,25 @@ exports.obtenerReporteContratos = async (req, res) => {
       [idsContratos]
     );
 
-// =========================
-// 📊 CUOTAS EN MORA (con gracia y saldo pendiente real)
-// =========================
-const [[mora]] = await db.query(
-  `
-  SELECT COUNT(*) AS cuotas_mora
-  FROM cuotas cu
-  WHERE cu.id_contrato IN (?)
-    AND cu.capital_pendiente > 0
-    AND cu.fecha_vencimiento < CURDATE()
-    AND cu.estado IN ('pendiente', 'atrasada')
-  `,
-  [idsContratos]
-);
+    // =========================
+    // CUOTAS EN MORA REAL
+    // Regla:
+    // - Solo cuotas con saldo pendiente.
+    // - Deben superar dias_gracia del contrato.
+    // =========================
+    const [[mora]] = await db.query(
+      `
+      SELECT COUNT(*) AS cuotas_mora
+      FROM cuotas cu
+      JOIN contratos co ON co.id_contrato = cu.id_contrato
+      WHERE cu.id_contrato IN (?)
+        AND cu.capital_pendiente > 0
+        AND co.tipo_financiamiento <> 'sin_interes'
+        AND cu.estado IN ('pendiente', 'atrasada')
+        AND DATEDIFF(CURDATE(), cu.fecha_vencimiento) > IFNULL(co.dias_gracia, 0)
+      `,
+      [idsContratos]
+    );
 
 
     // =========================

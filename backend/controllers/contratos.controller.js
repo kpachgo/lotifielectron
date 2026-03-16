@@ -1,4 +1,9 @@
 const db = require('../config/db');
+const TIPOS_FINANCIAMIENTO_VALIDOS = new Set([
+  'interes_saldo',
+  'penalizacion_fija',
+  'sin_interes'
+]);
 
 function round2(value) {
   return Number(Number(value || 0).toFixed(2));
@@ -32,7 +37,10 @@ function calcularCuotaPMT(monto, plazoMeses, tasaAnual, tipoFinanciamiento) {
   const n = Number(plazoMeses || 0);
   if (P <= 0 || n <= 0) return 0;
 
-  if (tipoFinanciamiento !== 'interes_saldo') {
+  if (
+    tipoFinanciamiento === 'penalizacion_fija'
+    || tipoFinanciamiento === 'sin_interes'
+  ) {
     return round2(P / n);
   }
 
@@ -76,7 +84,10 @@ function generarPlanCapital({
     }
 
     let capitalMes = round2(cuota - interesMes);
-    if (tipoFinanciamiento !== 'interes_saldo') {
+    if (
+      tipoFinanciamiento === 'penalizacion_fija'
+      || tipoFinanciamiento === 'sin_interes'
+    ) {
       capitalMes = round2(cuota);
     }
 
@@ -102,14 +113,23 @@ function generarPlanCapital({
 // BUSCAR CLIENTE
 exports.buscarCliente = async (req, res) => {
   try {
-    const texto = `%${req.params.texto}%`;
+    const textoRaw = String(req.params.texto || '').trim();
+    const texto = `%${textoRaw}%`;
+    const idCliente = Number(textoRaw);
+    const tieneIdExacto = Number.isInteger(idCliente) && idCliente > 0;
 
     const [rows] = await db.query(
       `SELECT id_cliente, nombres, apellidos, dui
        FROM cliente
-       WHERE nombres LIKE ? OR apellidos LIKE ?
+       WHERE (
+         nombres LIKE ?
+         OR apellidos LIKE ?
+         OR CONCAT(TRIM(nombres), ' ', TRIM(apellidos)) LIKE ?
+         OR dui LIKE ?
+         OR (? = 1 AND id_cliente = ?)
+       )
        ORDER BY nombres`,
-      [texto, texto]
+      [texto, texto, texto, texto, tieneIdExacto ? 1 : 0, idCliente || 0]
     );
 
     res.json(rows);
@@ -205,6 +225,9 @@ exports.crearContrato = async (req, res) => {
     if (!tipo_financiamiento) {
       return res.status(400).json({ error: 'Tipo de financiamiento requerido' });
     }
+    if (!TIPOS_FINANCIAMIENTO_VALIDOS.has(tipo_financiamiento)) {
+      return res.status(400).json({ error: 'Tipo de financiamiento invalido' });
+    }
 
     await conn.beginTransaction();
 
@@ -236,15 +259,20 @@ exports.crearContrato = async (req, res) => {
       return res.status(400).json({ error: 'Plazo de meses invalido' });
     }
 
-    const tasaAnualContrato = round2(
-      tipo_financiamiento === 'interes_saldo'
-        ? (tasa_interes_anual ?? 16)
-        : 0
-    );
+    const tasaAnualContrato = tipo_financiamiento === 'interes_saldo'
+      ? round2(tasa_interes_anual ?? 16)
+      : null;
+    const penalizacionFijaContrato = tipo_financiamiento === 'penalizacion_fija'
+      ? round2(penalizacion_fija || 0)
+      : null;
+    const diasGraciaContrato = tipo_financiamiento === 'sin_interes'
+      ? 0
+      : Number(dias_gracia || 0);
+
     const cuotaCalculada = calcularCuotaPMT(
       montoFinanciadoNum,
       plazoMesesNum,
-      tasaAnualContrato,
+      tasaAnualContrato || 0,
       tipo_financiamiento
     );
     if (montoFinanciadoNum > 0 && cuotaCalculada <= 0) {
@@ -300,9 +328,9 @@ exports.crearContrato = async (req, res) => {
       fechaVencimiento,
       estadoContrato,
       montoFinanciadoNum,
-      tipo_financiamiento === 'interes_saldo' ? tasaAnualContrato : null,
-      tipo_financiamiento === 'penalizacion_fija' ? penalizacion_fija : null,
-      dias_gracia || 0
+      tasaAnualContrato,
+      penalizacionFijaContrato,
+      diasGraciaContrato
     ]);
 
     const id_contrato = result.insertId;
@@ -325,7 +353,7 @@ exports.crearContrato = async (req, res) => {
         plazoMeses: plazoMesesNum,
         cuotaMensual: cuotaCalculada,
         tipoFinanciamiento: tipo_financiamiento,
-        tasaInteresAnual: tasaAnualContrato
+        tasaInteresAnual: tasaAnualContrato || 0
       });
 
       for (let i = 1; i <= plazoMesesNum; i += 1) {

@@ -90,17 +90,20 @@ function sumarMesesISO(fechaISO, meses) {
 }
 
 function tasaMensualContrato(contrato) {
+  if (contrato.tipo_financiamiento === 'sin_interes') return 0;
   if (contrato.tipo_financiamiento !== 'interes_saldo') return 0;
   const tasaAnual = toNumber(contrato.tasa_interes_anual, 16) / 100;
   return tasaAnual / 12;
 }
 
 function calcularInteresPeriodo(contrato, saldoContrato) {
+  if (contrato.tipo_financiamiento === 'sin_interes') return 0;
   if (contrato.tipo_financiamiento !== 'interes_saldo') return 0;
   return round2(toNumber(saldoContrato) * tasaMensualContrato(contrato));
 }
 
 function calcularMoraTotal({ contrato, cuota, diasAtraso, aplicarMora }) {
+  if (contrato.tipo_financiamiento === 'sin_interes') return 0;
   if (!aplicarMora) return 0;
 
   const diasGracia = toNumber(contrato.dias_gracia, 0);
@@ -207,6 +210,7 @@ function calcularTotalCuotasExigibles(cuotasExigibles) {
 
 function calcularMoraGlobalPagoUnico(contrato, cuotasExigibles, fechaAbonoYMD) {
   if (!cuotasExigibles.length) return 0;
+  if (contrato.tipo_financiamiento === 'sin_interes') return 0;
 
   const diasGracia = toNumber(contrato.dias_gracia, 0);
   if (contrato.tipo_financiamiento === 'interes_saldo') {

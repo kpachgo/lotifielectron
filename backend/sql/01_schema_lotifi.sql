@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS contratos (
   id_contrato INT NOT NULL AUTO_INCREMENT,
   id_cliente INT NOT NULL,
   id_lote INT NOT NULL,
-  tipo_financiamiento ENUM('interes_saldo','penalizacion_fija') NOT NULL,
+  tipo_financiamiento ENUM('interes_saldo','penalizacion_fija','sin_interes') NOT NULL,
   precio_total DECIMAL(10,2) NOT NULL,
   prima DECIMAL(10,2) DEFAULT 0.00,
   monto_financiado DECIMAL(10,2) NOT NULL,
@@ -129,14 +129,24 @@ CREATE TABLE IF NOT EXISTS pagos (
 
 CREATE TABLE IF NOT EXISTS documentos (
   id_documento INT NOT NULL AUTO_INCREMENT,
-  id_pago INT NOT NULL,
+  id_pago INT DEFAULT NULL,
+  id_cliente INT DEFAULT NULL,
+  id_contrato INT DEFAULT NULL,
   tipo_documento VARCHAR(50) NOT NULL,
+  descripcion_documento VARCHAR(255) DEFAULT NULL,
   ruta_archivo VARCHAR(255) NOT NULL,
   fecha_subida DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id_documento),
   KEY idx_documentos_pago (id_pago),
+  KEY idx_documentos_cliente (id_cliente),
+  KEY idx_documentos_contrato (id_contrato),
+  KEY idx_documentos_tipo (tipo_documento),
   CONSTRAINT fk_documentos_pago
-    FOREIGN KEY (id_pago) REFERENCES pagos (id_pago)
+    FOREIGN KEY (id_pago) REFERENCES pagos (id_pago),
+  CONSTRAINT fk_documentos_cliente
+    FOREIGN KEY (id_cliente) REFERENCES cliente (id_cliente),
+  CONSTRAINT fk_documentos_contrato
+    FOREIGN KEY (id_contrato) REFERENCES contratos (id_contrato)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- =========================

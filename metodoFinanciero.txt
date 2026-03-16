@@ -1,253 +1,105 @@
-Perfecto 👌 aquí tienes un resumen claro, técnico y ordenado de **los dos métodos financieros que estás usando**, cómo se reflejan en la base de datos y cómo se calculan.
+METODO FINANCIERO LOTIFI - ACTUALIZADO
+Fecha de actualizacion: 2026-03-16
 
-# 🏦 LOS DOS MÉTODOS FINANCIEROS DEL SISTEMA
+Este documento describe la logica REAL implementada en backend/controllers/pagos.controller.js.
 
-Tu sistema soporta **dos motores financieros distintos**, definidos en:
-contratos.tipo_financiamiento
+1) MOTOR GENERAL
+- El sistema trabaja por saldo, no por letras cerradas.
+- Saldo real de contrato: contratos.capital_pendiente.
+- Saldo real de cada cuota: cuotas.capital_pendiente.
+- Cada pago registra desglose completo:
+  - abono_capital
+  - abono_interes
+  - abono_mora
+  - monto_total
+- Cierre:
+  - cuota pagada cuando cuotas.capital_pendiente <= 0
+  - contrato cancelado cuando contratos.capital_pendiente <= 0
 
+2) TIPOS DE FINANCIAMIENTO
+Campo: contratos.tipo_financiamiento
 Valores:
-
-* `'interes_saldo'`
-* `'penalizacion_fija'`
-
-# 🔵 1️⃣ MÉTODO: INTERÉS SOBRE SALDO (30/360)
-
-## 📌 Concepto
-
-* Cuotas fijas.
-* Interés mensual sobre el capital pendiente.
-* El capital pendiente disminuye con cada pago.
-* No usa días de gracia.
-* No hay penalización fija.
-* Puede pagarse más que la cuota (abono a capital).
-
-## 📊 Cómo se refleja en la base de datos
-
-### En `contratos`
-
-Campos utilizados:
-
-* `tipo_financiamiento = 'interes_saldo'`
-* `tasa_interes_anual`
-* `capital_pendiente`
-* `cuota`
-* `monto_financiado`
-
-`penalizacion_fija` → NULL
-`dias_gracia` → no se usa
-
----
-
-### En `cuotas`
-
-* `monto_cuota` → cuota fija mensual
-* `estado`
-* `interes_generado`
-* `capital_pendiente` (cuota fija)
-
----
-
-### En `pagos`
-
-* `abono_interes`
-* `abono_capital`
-* `monto_total`
-
----
-
-## 🧮 Cómo se calcula
-
-### 📌 Interés mensual (método 30/360)
-
-```
-Interés = CapitalPendiente × (TasaAnual / 100) × 30 / 360
-```
-
-Ejemplo:
-
-Capital pendiente: 27,500
-Tasa anual: 16%
-
-```
-Interés = 27,500 × 0.16 × 30 / 360
-Interés = 366.67
-```
-
----
-
-## 💰 Orden de aplicación del pago
-
-Cuando el cliente paga:
-
-1️⃣ Primero se paga interés
-2️⃣ Luego capital
-3️⃣ Se reduce `contratos.capital_pendiente`
-
-Si paga más que la cuota:
-
-* El excedente va directo a capital.
-* Puede liquidar antes del plazo.
-
----
-
-## 📉 Qué ocurre cada mes
-
-* El capital pendiente baja.
-* El interés del siguiente mes baja.
-* La cuota es fija, pero la proporción interés/capital cambia.
-
----
-
-# 🟢 2️⃣ MÉTODO: PENALIZACIÓN FIJA POR CUOTA VENCIDA
-
-## 📌 Concepto
-
-* Cuotas fijas.
-* No hay interés financiero.
-* Solo penalización fija si hay atraso.
-* La penalización no aumenta.
-* Aplica solo si el atraso supera los días de gracia.
-
----
-
-## 📊 Cómo se refleja en la base de datos
-
-### En `contratos`
-
-Campos utilizados:
-
-* `tipo_financiamiento = 'penalizacion_fija'`
-* `penalizacion_fija`
-* `dias_gracia`
-* `cuota`
-* `capital_pendiente`
-
-`tasa_interes_anual` → NULL
-
----
-
-### En `cuotas`
-
-* `monto_cuota`
-* `penalizacion_aplicada`
-* `estado`
-
----
-
-### En `pagos`
-
-* `abono_mora`
-* `abono_capital`
-* `monto_total`
-
----
-
-## 🧮 Cómo se calcula
-
-### 📌 Primero se calculan días de atraso
-
-```
-diasAtraso = fechaActual - fecha_vencimiento
-```
-
----
-
-### 📌 Regla
-
-Si:
-
-```
-diasAtraso > dias_gracia
-```
-
-Entonces:
-
-```
-penalizacion = penalizacion_fija
-```
-
-Si no:
-
-```
-penalizacion = 0
-```
-
----
-
-## 💰 Total a pagar
-
-```
-Total = cuota + penalizacion
-```
-
----
-
-## 💳 Orden de aplicación del pago
-
-1️⃣ Primero paga penalización
-2️⃣ Luego capital
-3️⃣ Se reduce `contratos.capital_pendiente`
-
----
-
-# 🔎 Diferencia clave entre ambos motores
-
-| Característica        | Interés sobre saldo | Penalización fija |
-| --------------------- | ------------------- | ----------------- |
-| Interés financiero    | ✅ Sí                | ❌ No              |
-| Penalización fija     | ❌ No                | ✅ Sí              |
-| Usa días de gracia    | ❌ No                | ✅ Sí              |
-| Interés baja cada mes | ✅ Sí                | ❌ No aplica       |
-| Permite abono extra   | ✅ Sí                | ✅ Sí              |
-
----
-
-# 🧠 Cómo decide el sistema qué motor usar
-
-En backend:
-
-```js
-if (contrato.tipo_financiamiento === 'interes_saldo') {
-   // calcular interés 30/360
-}
-
-if (contrato.tipo_financiamiento === 'penalizacion_fija') {
-   // aplicar penalización fija si corresponde
-}
-```
-
----
-
-# 🏗 Arquitectura financiera actual
-
-* Las cuotas son calendario fijo.
-* El capital real vive en `contratos.capital_pendiente`.
-* El pago siempre se descompone:
-
-  * interés
-  * mora
-  * capital
-* El sistema permite liquidación anticipada.
-* Se pueden adjuntar comprobantes digitales.
-* Se guarda número de recibo físico.
-
-============================================
-use lotifi;
--- 1️⃣ Desactivar llaves foráneas
-SET FOREIGN_KEY_CHECKS = 0;
-
--- 2️⃣ Vaciar tablas (reinicia AUTO_INCREMENT)
-TRUNCATE TABLE recibos;
-TRUNCATE TABLE pagos;
-TRUNCATE TABLE cuotas;
-TRUNCATE TABLE contratos;
-TRUNCATE TABLE reservas;
-TRUNCATE TABLE documentos;
-TRUNCATE TABLE gastos;
-TRUNCATE TABLE lotes;
-TRUNCATE TABLE poligonos;
-TRUNCATE TABLE lotificaciones;
-TRUNCATE TABLE cliente;
-
--- 3️⃣ Reactivar llaves foráneas
-SET FOREIGN_KEY_CHECKS = 1;
+- interes_saldo
+- penalizacion_fija
+- sin_interes
+
+3) CREACION DE CONTRATO Y PLAN DE CAPITAL
+Archivo: backend/controllers/contratos.controller.js
+
+3.1 Cuota mensual
+- interes_saldo: cuota PMT con tasa mensual (tasa_anual / 12)
+- penalizacion_fija: cuota = monto_financiado / plazo_meses
+- sin_interes: cuota = monto_financiado / plazo_meses
+
+3.2 Plan por cuota
+- Se genera capital programado por cuota y se guarda en cuotas.capital_pendiente.
+- En interes_saldo, la parte de interes se estima por saldo para construir el plan.
+- En penalizacion_fija y sin_interes, la cuota se trata como capital programado.
+
+4) CALCULO EN PAGO INDIVIDUAL
+Archivo: backend/controllers/pagos.controller.js
+
+4.1 Interes de periodo (interes_saldo)
+interes_periodo = capital_pendiente_contrato * (tasa_interes_anual / 100) / 12
+
+4.2 Mora
+Regla base:
+- Solo aplica si dias_atraso > dias_gracia.
+
+interes_saldo:
+- mora_total = monto_cuota * 0.035 * (dias_aplicados / 30)
+- dias_aplicados = min(dias_atraso, 30)
+
+penalizacion_fija:
+- mora_total = contratos.penalizacion_fija
+
+sin_interes:
+- mora_total = 0 (no mora)
+
+4.3 Mora/interes pendiente por cuota
+- Se descuenta lo ya pagado en esa cuota:
+  - interes_pendiente = interes_total - interes_ya_pagado_cuota
+  - mora_pendiente = mora_total - mora_ya_pagada_cuota
+
+5) FECHAS Y VALIDACIONES
+- Formato obligatorio YYYY-MM-DD.
+- fecha_abono no puede ser:
+  - menor a fecha_inicio del contrato
+  - mayor a fecha_vencimiento del contrato
+  - menor al ultimo pago registrado del contrato
+
+6) RANGO EXIGIBLE Y PAGO PARCIAL
+- Si por fecha de abono hay varias cuotas vencidas/exigibles, se construye plan por rango.
+- Orden global estricto de aplicacion en rango:
+  1. mora total del rango
+  2. interes total del rango
+  3. capital
+- Se permite pago parcial del rango.
+- Si sobra dinero luego del rango, se aplica a capital de cuotas futuras (lineas EX-C* con interes=0 y mora=0).
+
+7) REGLA DE SECUENCIA
+- Siempre se debe empezar por la primera cuota pendiente del contrato.
+- No se puede saltar una cuota pendiente anterior.
+
+8) PAGO MASIVO (/api/pagos/masivo)
+- Obliga iniciar en la primera cuota pendiente.
+- No permite huecos ni cuotas ya pagadas dentro del rango.
+- Inserta un pago por cuota y marca cada cuota del rango como pagada.
+- La fecha de abono y fecha de recibo se corren por mes en cada cuota del rango.
+- Comportamiento actual: en el loop del masivo, la mora se aplica solo en la primera cuota del rango.
+
+9) ESTADO DE CUENTA Y BUSQUEDA POR CODIGO
+- Endpoints:
+  - GET /api/pagos/estado/:idContrato
+  - POST /api/pagos/por-codigo
+- Devuelven cuota pendiente, rango exigible, mora/interes/capital exigible y total sugerido.
+
+10) RESUMEN CONTABLE EN REPORTES
+- saldo_pendiente = monto_financiado - capital_pagado
+- saldo_acumulado = prima + capital_pagado
+- total_abonado = prima + total_pagos_registrados
+
+11) REGLA ESPECIFICA DE SIN_INTERES
+- No genera interes de periodo.
+- No genera mora ni penalizacion por atraso.
+- El pago se aplica 100% a capital (salvo que en futuro se cambie regla de negocio).

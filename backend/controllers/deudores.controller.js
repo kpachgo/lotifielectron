@@ -118,6 +118,9 @@ exports.obtenerDeudores = async (req, res) => {
             item.monto_mora + moraCuotaPendiente
           );
         }
+      } else if (item.tipo_financiamiento === 'sin_interes') {
+        // Este metodo no cobra interes ni mora: solo saldo de capital vencido.
+        item.monto_mora = round2(item.monto_mora);
       }
     }
 

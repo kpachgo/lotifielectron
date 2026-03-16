@@ -237,7 +237,7 @@ function renderTablaReportes(contratos) {
           <span class="badge ${
             c.estado === 'activo'
               ? 'bg-success'
-              : c.estado === 'finalizado'
+              : c.estado === 'cancelado'
               ? 'bg-secondary'
               : 'bg-warning'
           }">${c.estado}</span>

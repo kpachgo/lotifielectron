@@ -190,3 +190,112 @@ Estado final del dia:
   - queda solo:
     - total de cuota/rango exigible
     - `Cuota base: $X x N` para contexto rapido.
+
+15) ACTUALIZACION INFRAESTRUCTURA Y DOCUMENTACION (2026-03-15)
+- Se actualizo `backend/controllers/reportes.controller.js` para que `cuotas_mora` respete dias de gracia del contrato:
+  - antes: contaba toda cuota vencida con saldo pendiente
+  - ahora: cuenta solo cuotas con `DATEDIFF(CURDATE(), fecha_vencimiento) > dias_gracia`
+- Se actualizo `base de datos.txt` con el esquema vigente alineado a `backend/sql/01_schema_lotifi.sql`.
+- Se actualizo `metodoFinanciero.txt` para reflejar la logica real actual del backend.
+
+Infraestructura de imagenes en red (Electron):
+- En `electron/main.js` se agrego resolucion de carpeta de uploads compartida.
+- Orden de prioridad para ruta compartida:
+  1. `LOTIFI_SHARED_UPLOADS_DIR`
+  2. `SHARED_UPLOADS_DIR`
+  3. `UPLOADS_DIR`
+  4. `DEFAULT_SHARED_UPLOADS_DIR` (valor de prueba hardcodeado)
+- Valor de prueba configurado:
+  - `\\Desktop-ssf4s0r\\laptopg\\LOTIFI_SHARED_UPLOADS_DIR`
+- Si la ruta compartida no es accesible, el sistema muestra advertencia y cae a ruta local:
+  - `%APPDATA%/../Local/.../uploads` (via `app.getPath('userData')`)
+
+Nota operativa de red:
+- Si el recurso compartido requiere usuario/contrasena, cada PC debe tener la carpeta mapeada/credenciales activas en Windows para evitar fallback local.
+
+16) NUEVO METODO FINANCIERO `sin_interes` (2026-03-16)
+- Se agrego tercer valor en `contratos.tipo_financiamiento`:
+  - `sin_interes`
+- Regla funcional definida:
+  - no cobra interes
+  - no cobra mora ni penalizacion
+  - cuota mensual = `monto_financiado / plazo_meses`
+- Persistencia al crear contrato (`contratos.controller.js`):
+  - `tipo_financiamiento = 'sin_interes'`
+  - `tasa_interes_anual = NULL`
+  - `penalizacion_fija = NULL`
+  - `dias_gracia = 0`
+- En `pagos.controller.js` se declaro de forma explicita para `sin_interes`:
+  - `interes_pendiente = 0`
+  - `mora_pendiente = 0`
+  - total exigible = capital pendiente
+- En `deudores.controller.js`:
+  - contratos `sin_interes` vencidos siguen apareciendo por capital vencido
+  - `monto_mora = 0.00`
+- Frontend:
+  - `contratos.html` y `frontend/js/contratos.js` incluyen opcion `sin_interes`
+  - se actualizo etiqueta a `Total del plan`
+  - en `frontend/js/deudores.js` se agrego badge `Sin interes`
+- SQL:
+ - `01_schema_lotifi.sql` y `03_migracion_alter_motor_financiero.sql` ahora incluyen `sin_interes` en enum
+ - nueva migracion incremental: `backend/sql/04_migracion_add_sin_interes.sql`
+
+17) CONFIGURACION DE RUTA DE GUARDADO DESDE APP ELECTRON (2026-03-16)
+- Se agrego nueva opcion de menu:
+  - `Archivo -> Configurar ruta de guardado...`
+- Se creo ventana modal de configuracion con input de ruta:
+  - ejemplo: `\\Desktop-ssf4s0r\laptopg\LOTIFI_SHARED_UPLOADS_DIR`
+  - botones: `Validar`, `Guardar`, `Cancelar`
+- Persistencia local por equipo:
+  - archivo JSON: `app-config.json` en `app.getPath('userData')`
+  - llave usada: `sharedUploadsDir`
+- Validacion tecnica al guardar:
+  - normaliza texto (trim/comillas)
+  - intenta crear carpeta (`mkdir - recursive`)
+  - realiza prueba real de escritura/borrado de archivo temporal
+- Aplicacion del cambio:
+  - al guardar, la app pregunta si desea reiniciar
+  - si acepta: `app.relaunch()` + `app.quit()`
+- Orden de prioridad de ruta de uploads (actualizado):
+  1. `sharedUploadsDir` guardado en config local
+  2. `LOTIFI_SHARED_UPLOADS_DIR`
+  3. `SHARED_UPLOADS_DIR`
+  4. `UPLOADS_DIR`
+  5. `DEFAULT_SHARED_UPLOADS_DIR`
+  6. fallback local si no hay acceso
+- Archivos involucrados:
+  - `electron/main.js`
+  - `electron/config-uploads.preload.js`
+  - `electron/config-uploads.html`
+
+18) MODULO DOCUMENTOS POR CLIENTE (2026-03-16)
+- Se creo nueva vista `frontend/documentos.html` + `frontend/js/documentos.js` para gestionar documentos de cliente.
+- Flujo funcional:
+  - buscar y seleccionar cliente
+  - vincular documento a contrato opcional
+  - subir/listar/ver/eliminar documentos
+  - el modulo excluye comprobantes de pago
+- Tipos de documento habilitados:
+  - `contrato`, `dui`, `nit`, `foto_cliente`, `otro`
+  - si tipo = `otro`, se requiere `descripcion_documento`
+- Formatos permitidos:
+  - PDF, JPG, JPEG, PNG
+- Backend (`documentos`):
+  - `POST /api/documentos/cliente` (multipart: `archivo`, `id_cliente`, `id_contrato?`, `tipo_documento`, `descripcion_documento?`)
+  - `GET /api/documentos/cliente/:id_cliente` (filtro opcional `id_contrato`)
+  - `DELETE /api/documentos/cliente/:id_documento` (bloquea eliminar comprobantes)
+  - endpoints de comprobante existentes se mantienen sin cambio.
+- Base de datos:
+  - `documentos.id_pago` ahora permite `NULL`
+  - nuevas columnas: `id_cliente`, `id_contrato`, `descripcion_documento`
+  - nuevos indices: cliente, contrato y tipo
+  - nuevas FK: `fk_documentos_cliente`, `fk_documentos_contrato`
+  - backfill de `id_cliente` para comprobantes historicos segun `pagos -> cuotas -> contratos`
+- Migraciones/SQL:
+  - esquema base actualizado en `backend/sql/01_schema_lotifi.sql`
+  - migracion acumulada actualizada en `backend/sql/03_migracion_alter_motor_financiero.sql`
+  - nueva migracion incremental: `backend/sql/05_migracion_documentos_cliente.sql`
+  - `backend/sql/README.md` actualizado con paso de ejecucion `05`
+- UI/Navegacion:
+  - se agrego enlace `Documentos` en navbar de pantallas principales
+  - se agrego tarjeta `Documentos` en dashboard `index.html`

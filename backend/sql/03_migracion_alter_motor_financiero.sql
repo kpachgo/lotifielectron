@@ -11,6 +11,7 @@ SET @schema_name = DATABASE();
 -- =========================================================
 DROP PROCEDURE IF EXISTS sp_add_col_if_missing;
 DROP PROCEDURE IF EXISTS sp_add_idx_if_missing;
+DROP PROCEDURE IF EXISTS sp_add_fk_if_missing;
 DROP PROCEDURE IF EXISTS sp_mod_col_if_exists;
 DROP PROCEDURE IF EXISTS sp_exec_if_table_exists;
 
@@ -72,6 +73,35 @@ BEGIN
   END IF;
 END$$
 
+CREATE PROCEDURE sp_add_fk_if_missing(
+  IN p_table VARCHAR(64),
+  IN p_fk VARCHAR(64),
+  IN p_def TEXT
+)
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = @schema_name
+      AND table_name = p_table
+  ) AND NOT EXISTS (
+    SELECT 1
+    FROM information_schema.table_constraints
+    WHERE table_schema = @schema_name
+      AND table_name = p_table
+      AND constraint_name = p_fk
+      AND constraint_type = 'FOREIGN KEY'
+  ) THEN
+    SET @sql = CONCAT(
+      'ALTER TABLE `', p_table, '` ',
+      'ADD ', p_def
+    );
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+  END IF;
+END$$
+
 CREATE PROCEDURE sp_mod_col_if_exists(
   IN p_table VARCHAR(64),
   IN p_col VARCHAR(64),
@@ -121,7 +151,7 @@ DELIMITER ;
 CALL sp_add_col_if_missing(
   'contratos',
   'tipo_financiamiento',
-  "ENUM('interes_saldo','penalizacion_fija') NULL AFTER `id_lote`"
+  "ENUM('interes_saldo','penalizacion_fija','sin_interes') NULL AFTER `id_lote`"
 );
 
 CALL sp_add_col_if_missing(
@@ -172,7 +202,7 @@ CALL sp_exec_if_table_exists(
 CALL sp_mod_col_if_exists(
   'contratos',
   'tipo_financiamiento',
-  "ENUM('interes_saldo','penalizacion_fija') NOT NULL"
+  "ENUM('interes_saldo','penalizacion_fija','sin_interes') NOT NULL"
 );
 
 CALL sp_mod_col_if_exists(
@@ -314,10 +344,81 @@ CALL sp_add_idx_if_missing(
 );
 
 -- =========================================================
+-- documentos
+-- =========================================================
+CALL sp_add_col_if_missing(
+  'documentos',
+  'id_cliente',
+  "INT NULL AFTER `id_pago`"
+);
+
+CALL sp_add_col_if_missing(
+  'documentos',
+  'id_contrato',
+  "INT NULL AFTER `id_cliente`"
+);
+
+CALL sp_add_col_if_missing(
+  'documentos',
+  'descripcion_documento',
+  "VARCHAR(255) NULL AFTER `tipo_documento`"
+);
+
+CALL sp_mod_col_if_exists(
+  'documentos',
+  'id_pago',
+  "INT NULL"
+);
+
+CALL sp_add_idx_if_missing(
+  'documentos',
+  'idx_documentos_cliente',
+  "INDEX `idx_documentos_cliente` (`id_cliente`)"
+);
+
+CALL sp_add_idx_if_missing(
+  'documentos',
+  'idx_documentos_contrato',
+  "INDEX `idx_documentos_contrato` (`id_contrato`)"
+);
+
+CALL sp_add_idx_if_missing(
+  'documentos',
+  'idx_documentos_tipo',
+  "INDEX `idx_documentos_tipo` (`tipo_documento`)"
+);
+
+CALL sp_exec_if_table_exists(
+  'documentos',
+  "UPDATE `documentos` d
+   JOIN `pagos` p ON p.id_pago = d.id_pago
+   JOIN `cuotas` cu ON cu.id_cuota = p.id_cuota
+   JOIN `contratos` co ON co.id_contrato = cu.id_contrato
+   SET d.id_cliente = co.id_cliente
+   WHERE d.id_cliente IS NULL
+     AND d.id_pago IS NOT NULL"
+);
+
+CALL sp_add_fk_if_missing(
+  'documentos',
+  'fk_documentos_cliente',
+  "CONSTRAINT `fk_documentos_cliente`
+   FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`)"
+);
+
+CALL sp_add_fk_if_missing(
+  'documentos',
+  'fk_documentos_contrato',
+  "CONSTRAINT `fk_documentos_contrato`
+   FOREIGN KEY (`id_contrato`) REFERENCES `contratos` (`id_contrato`)"
+);
+
+-- =========================================================
 -- Limpieza helper procedures
 -- =========================================================
 DROP PROCEDURE IF EXISTS sp_add_col_if_missing;
 DROP PROCEDURE IF EXISTS sp_add_idx_if_missing;
+DROP PROCEDURE IF EXISTS sp_add_fk_if_missing;
 DROP PROCEDURE IF EXISTS sp_mod_col_if_exists;
 DROP PROCEDURE IF EXISTS sp_exec_if_table_exists;
 
