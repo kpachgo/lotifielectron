@@ -3,6 +3,34 @@
   let poligonoSeleccionado = null;
   let loteSeleccionado = null;
   let isSubmittingContrato = false;
+  const MODO_CALCULO_POR_PLAZO = 'por_plazo';
+  const MODO_CALCULO_POR_CUOTA = 'por_cuota';
+  const MAX_PLAZO_POR_CUOTA = 180;
+
+function round2(value) {
+  return Number(Number(value || 0).toFixed(2));
+}
+
+function getTipoFinanciamiento() {
+  return (
+    document.querySelector('input[name="tipoFinanciamiento"]:checked')?.value
+    || 'interes_saldo'
+  );
+}
+
+function getModoCalculo() {
+  return (
+    document.querySelector('input[name="modoCalculo"]:checked')?.value
+    || MODO_CALCULO_POR_PLAZO
+  );
+}
+
+function seleccionarModoCalculo(modo) {
+  const radio = document.querySelector(`input[name="modoCalculo"][value="${modo}"]`);
+  if (!radio) return false;
+  radio.checked = true;
+  return true;
+}
 
   // BUSCAR CLIENTE
 async function buscarCliente() {
@@ -130,61 +158,257 @@ function calcularFinanciado() {
   document.getElementById('montoFinanciado').value =
     monto.toFixed(2);
 
-  recalcularCuotaAutomatica();
+  recalcularPlanContrato();
 }
 
-function recalcularCuotaAutomatica() {
-  const monto = Number(document.getElementById('montoFinanciado')?.value || 0);
-  const plazo = Number(document.getElementById('plazoMeses')?.value || 0);
-  const cuotaInput = document.getElementById('cuotaMensual');
-  if (!cuotaInput) return;
+function setInfoUltimaCuota(message, isError = false) {
+  const info = document.getElementById('infoUltimaCuota');
+  if (!info) return;
 
-  if (!monto || !plazo || plazo <= 0) {
-    cuotaInput.value = '';
-    calcularPrecioFinal();
-    return;
-  }
-
-  const tipoFinanciamiento =
-    document.querySelector('input[name="tipoFinanciamiento"]:checked')?.value ||
-    'interes_saldo';
-
-  let cuota = 0;
-
-  if (tipoFinanciamiento === 'interes_saldo') {
-    const tasaAnual = Number(document.getElementById('tasaInteresAnual')?.value || 16);
-    const tasaMensual = (tasaAnual / 100) / 12;
-
-    if (tasaMensual <= 0) {
-      cuota = monto / plazo;
-    } else {
-      const factor = Math.pow(1 + tasaMensual, plazo);
-      cuota = monto * ((tasaMensual * factor) / (factor - 1));
-    }
-  } else {
-    cuota = monto / plazo;
-  }
-
-  cuotaInput.value = Number(cuota).toFixed(2);
-  calcularPrecioFinal();
+  info.textContent = message || '';
+  info.classList.toggle('text-danger', Boolean(message && isError));
+  info.classList.toggle('text-muted', !message || !isError);
 }
-function calcularPrecioFinal() {
-  const cuota = Number(document.getElementById('cuotaMensual').value || 0);
-  const plazo = Number(document.getElementById('plazoMeses').value || 0);
+
+function setPrecioFinal(totalSinPrima) {
   const prima = Number(document.getElementById('prima').value || 0);
+  const precioFinalInput = document.getElementById('precioFinal');
 
-  if (!cuota || !plazo) {
-    document.getElementById('precioFinal').value = '';
+  if (!precioFinalInput) return;
+  if (!totalSinPrima || totalSinPrima <= 0) {
+    precioFinalInput.value = '';
     return;
   }
 
-  const total = (cuota * plazo) + prima;
+  const total = round2(totalSinPrima + prima);
+  precioFinalInput.value = total.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
 
-  document.getElementById('precioFinal').value =
-    total.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+function calcularCuotaPorPlazo({
+  monto,
+  plazo,
+  tipoFinanciamiento,
+  tasaAnual
+}) {
+  const P = Number(monto || 0);
+  const n = Number(plazo || 0);
+  if (P <= 0 || n <= 0) return 0;
+
+  if (
+    tipoFinanciamiento === 'penalizacion_fija'
+    || tipoFinanciamiento === 'sin_interes'
+  ) {
+    return round2(P / n);
+  }
+
+  const tasaMensual = Number(tasaAnual || 16) / 100 / 12;
+  if (tasaMensual <= 0) {
+    return round2(P / n);
+  }
+
+  const factor = Math.pow(1 + tasaMensual, n);
+  const cuota = P * ((tasaMensual * factor) / (factor - 1));
+  return round2(cuota);
+}
+
+function calcularPlanPorCuota({
+  monto,
+  cuotaBase,
+  tipoFinanciamiento,
+  tasaAnual
+}) {
+  const P = round2(monto);
+  const cuota = round2(cuotaBase);
+
+  if (P <= 0) {
+    return {
+      ok: false,
+      error: 'Monto financiado invalido'
+    };
+  }
+
+  if (cuota <= 0) {
+    return {
+      ok: false,
+      error: 'Ingrese una cuota valida'
+    };
+  }
+
+  if (
+    tipoFinanciamiento === 'penalizacion_fija'
+    || tipoFinanciamiento === 'sin_interes'
+  ) {
+    const plazo = Math.ceil(P / cuota);
+    if (plazo > MAX_PLAZO_POR_CUOTA) {
+      return {
+        ok: false,
+        error: `El plan supera el maximo permitido de ${MAX_PLAZO_POR_CUOTA} meses`
+      };
+    }
+
+    const ultimaCuota = round2(P - (cuota * (plazo - 1)));
+    const totalSinPrima = round2((cuota * (plazo - 1)) + ultimaCuota);
+    return {
+      ok: true,
+      plazo,
+      cuotaBase: cuota,
+      ultimaCuota,
+      totalSinPrima
+    };
+  }
+
+  const tasaMensual = Number(tasaAnual || 16) / 100 / 12;
+  if (tasaMensual > 0) {
+    const interesPrimerMes = round2(P * tasaMensual);
+    if (cuota <= interesPrimerMes) {
+      return {
+        ok: false,
+        error: 'La cuota es demasiado baja para cubrir el interes mensual'
+      };
+    }
+  }
+
+  let saldo = round2(P);
+  let totalSinPrima = 0;
+
+  for (let i = 1; i <= MAX_PLAZO_POR_CUOTA; i += 1) {
+    const interesMes = tasaMensual > 0 ? round2(saldo * tasaMensual) : 0;
+    const capitalMes = round2(cuota - interesMes);
+
+    if (capitalMes <= 0) {
+      return {
+        ok: false,
+        error: 'La cuota es demasiado baja para amortizar capital'
+      };
+    }
+
+    if (capitalMes >= saldo) {
+      const ultimaCuota = round2(saldo + interesMes);
+      totalSinPrima = round2(totalSinPrima + ultimaCuota);
+      return {
+        ok: true,
+        plazo: i,
+        cuotaBase: cuota,
+        ultimaCuota,
+        totalSinPrima
+      };
+    }
+
+    saldo = round2(saldo - capitalMes);
+    totalSinPrima = round2(totalSinPrima + cuota);
+  }
+
+  return {
+    ok: false,
+    error: `El plan supera el maximo permitido de ${MAX_PLAZO_POR_CUOTA} meses`
+  };
+}
+
+function actualizarModoCalculoUI() {
+  const modo = getModoCalculo();
+  const cuotaInput = document.getElementById('cuotaMensual');
+  const plazoInput = document.getElementById('plazoMeses');
+  const tieneSelectorModo =
+    Boolean(document.getElementById('modoCalculoPlazo'))
+    && Boolean(document.getElementById('modoCalculoCuota'));
+
+  if (!cuotaInput || !plazoInput) return;
+  if (!tieneSelectorModo) {
+    cuotaInput.readOnly = false;
+    plazoInput.readOnly = false;
+    return;
+  }
+
+  cuotaInput.readOnly = modo === MODO_CALCULO_POR_PLAZO;
+  plazoInput.readOnly = modo === MODO_CALCULO_POR_CUOTA;
+}
+
+function recalcularPlanContrato() {
+  const monto = Number(document.getElementById('montoFinanciado')?.value || 0);
+  const cuotaInput = document.getElementById('cuotaMensual');
+  const plazoInput = document.getElementById('plazoMeses');
+  if (!cuotaInput || !plazoInput) return;
+
+  actualizarModoCalculoUI();
+
+  const modo = getModoCalculo();
+  const tipoFinanciamiento = getTipoFinanciamiento();
+  const tasaAnual = Number(document.getElementById('tasaInteresAnual')?.value || 16);
+
+  if (!monto || monto <= 0) {
+    if (modo === MODO_CALCULO_POR_PLAZO) {
+      cuotaInput.value = '';
+    } else {
+      plazoInput.value = '';
+    }
+    setPrecioFinal(0);
+    setInfoUltimaCuota('');
+    return;
+  }
+
+  if (modo === MODO_CALCULO_POR_PLAZO) {
+    const plazo = Number(plazoInput.value || 0);
+    if (!plazo || plazo <= 0) {
+      cuotaInput.value = '';
+      setPrecioFinal(0);
+      setInfoUltimaCuota('');
+      return;
+    }
+
+    const cuota = calcularCuotaPorPlazo({
+      monto,
+      plazo,
+      tipoFinanciamiento,
+      tasaAnual
     });
+
+    if (!cuota || cuota <= 0) {
+      cuotaInput.value = '';
+      setPrecioFinal(0);
+      setInfoUltimaCuota('No se pudo calcular una cuota valida', true);
+      return;
+    }
+
+    cuotaInput.value = cuota.toFixed(2);
+    setPrecioFinal(round2(cuota * plazo));
+    setInfoUltimaCuota('');
+    return;
+  }
+
+  const cuotaIngresada = Number(cuotaInput.value || 0);
+  if (!cuotaIngresada || cuotaIngresada <= 0) {
+    plazoInput.value = '';
+    setPrecioFinal(0);
+    setInfoUltimaCuota('');
+    return;
+  }
+
+  const planPorCuota = calcularPlanPorCuota({
+    monto,
+    cuotaBase: cuotaIngresada,
+    tipoFinanciamiento,
+    tasaAnual
+  });
+
+  if (!planPorCuota.ok) {
+    plazoInput.value = '';
+    setPrecioFinal(0);
+    setInfoUltimaCuota(planPorCuota.error, true);
+    return;
+  }
+
+  cuotaInput.value = round2(planPorCuota.cuotaBase).toFixed(2);
+  plazoInput.value = String(planPorCuota.plazo);
+  setPrecioFinal(planPorCuota.totalSinPrima);
+
+  if (Math.abs(planPorCuota.ultimaCuota - planPorCuota.cuotaBase) >= 0.01) {
+    setInfoUltimaCuota(`Ultima cuota estimada: $${planPorCuota.ultimaCuota.toFixed(2)}`);
+  } else {
+    setInfoUltimaCuota('');
+  }
 }
 async function onLotificacionChange(e) {
     console.log('🔥 onLotificacionChange ejecutado', e.target.value);
@@ -300,17 +524,41 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('precioTotal')
     .addEventListener('input', calcularFinanciado);
 
-    document.getElementById('cuotaMensual')
-  .addEventListener('input', calcularPrecioFinal);
+  document.getElementById('cuotaMensual')
+    .addEventListener('input', recalcularPlanContrato);
 
-document.getElementById('plazoMeses')
-  .addEventListener('input', recalcularCuotaAutomatica);
+  document.getElementById('plazoMeses')
+    .addEventListener('input', recalcularPlanContrato);
 
-document.getElementById('prima')
-  .addEventListener('input', calcularPrecioFinal);
+  document.getElementById('cuotaMensual')
+    .addEventListener('focus', () => {
+      if (getModoCalculo() !== MODO_CALCULO_POR_CUOTA) {
+        if (seleccionarModoCalculo(MODO_CALCULO_POR_CUOTA)) {
+          recalcularPlanContrato();
+        }
+      }
+    });
+
+  document.getElementById('plazoMeses')
+    .addEventListener('focus', () => {
+      if (getModoCalculo() !== MODO_CALCULO_POR_PLAZO) {
+        if (seleccionarModoCalculo(MODO_CALCULO_POR_PLAZO)) {
+          recalcularPlanContrato();
+        }
+      }
+    });
+
+  const modoPlazo = document.getElementById('modoCalculoPlazo');
+  const modoCuota = document.getElementById('modoCalculoCuota');
+  if (modoPlazo) {
+    modoPlazo.addEventListener('change', recalcularPlanContrato);
+  }
+  if (modoCuota) {
+    modoCuota.addEventListener('change', recalcularPlanContrato);
+  }
 
   document.getElementById('tasaInteresAnual')
-    .addEventListener('input', recalcularCuotaAutomatica);
+    .addEventListener('input', recalcularPlanContrato);
 
   // ===============================
   // TIPO DE FINANCIAMIENTO
@@ -324,7 +572,7 @@ document.getElementById('prima')
   tipoSinInteres.addEventListener('change', toggleTipo);
 
   function toggleTipo() {
-    const tipo = document.querySelector('input[name="tipoFinanciamiento"]:checked')?.value || 'interes_saldo';
+    const tipo = getTipoFinanciamiento();
     const interes = tipo === 'interes_saldo';
     const penalizacion = tipo === 'penalizacion_fija';
 
@@ -334,11 +582,11 @@ document.getElementById('prima')
     document.getElementById('configPenalizacion')
       .classList.toggle('d-none', !penalizacion);
 
-    recalcularCuotaAutomatica();
+    recalcularPlanContrato();
   }
 
   toggleTipo();
-  recalcularCuotaAutomatica();
+  recalcularPlanContrato();
 
   // ===============================
   // FORMULARIO
@@ -352,12 +600,15 @@ document.getElementById('prima')
 
       if (isSubmittingContrato) return;
 
-      const tipoFinanciamiento =
-        document.querySelector('input[name="tipoFinanciamiento"]:checked').value;
+      recalcularPlanContrato();
+
+      const tipoFinanciamiento = getTipoFinanciamiento();
+      const modoCalculo = getModoCalculo();
 
       const data = {
         id_cliente: document.getElementById('idClienteSeleccionado').value,
         id_lote: document.getElementById('selectLote').value,
+        modo_calculo: modoCalculo,
         tipo_financiamiento: tipoFinanciamiento,
         precio_total: Number(document.getElementById('precioTotal').value),
         prima: Number(document.getElementById('prima').value),
@@ -388,6 +639,22 @@ document.getElementById('prima')
 
       if (!data.cuota || data.cuota <= 0) {
         alert('No se pudo calcular una cuota valida');
+        return;
+      }
+
+      if (!data.plazo_meses || data.plazo_meses <= 0) {
+        alert('No se pudo calcular un plazo valido');
+        return;
+      }
+
+      if (modoCalculo === MODO_CALCULO_POR_CUOTA && data.plazo_meses > MAX_PLAZO_POR_CUOTA) {
+        alert(`El plan supera el maximo permitido de ${MAX_PLAZO_POR_CUOTA} meses`);
+        return;
+      }
+
+      const infoUltima = document.getElementById('infoUltimaCuota');
+      if (infoUltima?.classList.contains('text-danger') && infoUltima.textContent) {
+        alert(infoUltima.textContent);
         return;
       }
 
@@ -423,6 +690,12 @@ document.getElementById('prima')
 
         alert('Contrato creado correctamente');
         formContrato.reset();
+        if (modoPlazo) {
+          modoPlazo.checked = true;
+        }
+        toggleTipo();
+        recalcularPlanContrato();
+        setInfoUltimaCuota('');
       } catch (error) {
         console.error('Error creando contrato:', error);
         alert('Error de conexion al crear contrato');

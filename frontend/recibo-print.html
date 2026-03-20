@@ -2,156 +2,1122 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Impresión de Recibo</title>
+<title>Impresion de Recibo</title>
 <style>
-/* ===============================
-   CONFIGURACIÓN DE PÁGINA
-================================ */
+:root {
+  --offset-x-mm: 0mm;
+  --offset-y-mm: 0mm;
+  --scale-x: 1;
+  --scale-y: 1;
+}
+
 @page {
   size: 210mm 135mm;
   margin: 0;
 }
-html, body {
-  width: 210mm;
-  height: 135mm;
+
+html,
+body {
   margin: 0;
   padding: 0;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 9pt;
   color: #000;
+  background: #fff;
 }
-/* CONTENEDOR PRINCIPAL */
+
+body {
+  position: relative;
+  overflow: hidden;
+}
+
+body.paper-custom {
+  width: 210mm;
+  height: 135mm;
+}
+
+body.paper-a4 {
+  width: 210mm;
+  height: 297mm;
+}
+
 .recibo {
   position: relative;
   width: 210mm;
   height: 135mm;
 }
-/* ===============================
-   UTILIDAD DE POSICIÓN
-================================ */
+
+.guide-layer {
+  position: absolute;
+  inset: 0;
+  width: 210mm;
+  height: 135mm;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.guide-layer img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  object-position: center center;
+}
+
+.fixed-layer,
+.print-layer {
+  position: absolute;
+  inset: 0;
+  width: 210mm;
+  height: 135mm;
+  transform-origin: top left;
+  transform: translate(var(--offset-x-mm), var(--offset-y-mm)) scale(var(--scale-x), var(--scale-y));
+}
+
+.fixed-layer {
+  z-index: 1;
+}
+
+.print-layer {
+  z-index: 2;
+}
+
 .field {
   position: absolute;
   white-space: nowrap;
 }
-/* ===============================
-   POSICIONES EXACTAS (MM)
-================================ */
-/* CLIENTE */
-#cliente-nombre   { left: 20mm; top: 32mm; font-size: 10pt; }
-#cliente-direccion{ left: 20mm; top: 40mm; }
-#cliente-doc      { left: 20mm; top: 48mm; }
-#cliente-tel      { left: 150mm; top: 40mm; }
-/* PAGO */
-#cuota-mensual    { left: 20mm; top: 60mm; }
-#abono-total      { left: 20mm; top: 92mm; font-size: 10pt; }
-#forma-pago       { left: 70mm; top: 60mm; }
-#banco            { left: 70mm; top: 68mm; }
-#fecha-abono      { left: 70mm; top: 76mm; }
-#fecha-recibo     { left: 70mm; top: 84mm; }
-/* SALDOS */
-#saldo-anterior   { left: 150mm; top: 60mm; }
-#menos-abono      { left: 150mm; top: 68mm; }
-#saldo-actual     { left: 150mm; top: 76mm; }
-#saldo-acumulado  { left: 150mm; top: 84mm; }
-/* TEXTO */
-#cantidad-letras  { left: 20mm; top: 104mm; width: 170mm; }
-#concepto-linea1  { left: 20mm; top: 112mm; }
-#concepto-linea2  { left: 20mm; top: 120mm; }
-/* FIRMA */
-#firma-cliente    { left: 20mm; top: 128mm; }
+
+.is-hidden {
+  display: none !important;
+}
+
+.cal-toggle {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  z-index: 13;
+  border: 1px solid #94a3b8;
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #0f172a;
+  box-shadow: 0 4px 12px rgba(2, 6, 23, 0.12);
+}
+
+.cal-panel {
+  position: fixed;
+  top: 44px;
+  right: 8px;
+  width: 440px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 52px);
+  overflow: auto;
+  z-index: 12;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.16);
+  padding: 10px;
+  font-size: 12px;
+  color: #0f172a;
+}
+
+.cal-panel h3 {
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+
+.cal-help {
+  margin: 0 0 8px;
+  color: #334155;
+  line-height: 1.3;
+}
+
+.cal-title {
+  margin: 10px 0 6px;
+  padding-top: 6px;
+  border-top: 1px solid #dbe4ee;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #1e3a8a;
+  text-transform: uppercase;
+}
+
+.cal-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.cal-field label {
+  display: block;
+  margin-bottom: 3px;
+  font-weight: 600;
+}
+
+.cal-field input,
+.cal-field select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #94a3b8;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.cal-field input[type='range'] {
+  padding: 0;
+}
+
+.cal-guide-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.cal-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.cal-item {
+  border: 1px solid #dbe4ee;
+  border-radius: 6px;
+  padding: 6px;
+  background: #fff;
+}
+
+.cal-item-name {
+  margin-bottom: 6px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.cal-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.cal-actions button {
+  border: 1px solid #94a3b8;
+  background: #fff;
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.cal-actions button.primary {
+  background: #0a4ecb;
+  border-color: #0a4ecb;
+  color: #fff;
+}
+
+.cal-status {
+  min-height: 14px;
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+@media print {
+  .cal-panel,
+  .cal-toggle,
+  .guide-layer {
+    display: none !important;
+  }
+}
 </style>
 </head>
 <body>
+<button id="btnToggleCalibracion" class="cal-toggle is-hidden" type="button">Ocultar calibracion</button>
+
 <div class="recibo">
-  <!-- CLIENTE -->
-  <div id="cliente-nombre" class="field"></div>
-  <div id="cliente-direccion" class="field"></div>
-  <div id="cliente-doc" class="field"></div>
-  <div id="cliente-tel" class="field"></div>
-  <div id="codigo-lote" class="field"></div>
-  <!-- PAGO -->
-  <div id="cuota-mensual" class="field"></div>
-  <div id="abono-total" class="field"></div>
-  <div id="forma-pago" class="field"></div>
-  <div id="banco" class="field"></div>
-  <div id="fecha-abono" class="field"></div>
-  <div id="fecha-recibo" class="field"></div>
-  <!-- SALDOS -->
-  <div id="saldo-anterior" class="field"></div>
-  <div id="menos-abono" class="field"></div>
-  <div id="saldo-actual" class="field"></div>
-  <div id="saldo-acumulado" class="field"></div>
-  <!-- TEXTO -->
-  <div id="cantidad-letras" class="field"></div>
-  <div id="concepto-linea1" class="field"></div>
-  <div id="concepto-linea2" class="field"></div>
-  <!-- FIRMA -->
-  <div id="firma-cliente" class="field"></div>
+  <div id="guideLayer" class="guide-layer is-hidden">
+    <img id="guideImage" alt="Plantilla visual de calibracion">
+  </div>
+
+  <div class="fixed-layer">
+    <div id="cliente-nombre" class="field"></div>
+    <div id="cliente-direccion" class="field"></div>
+    <div id="cliente-doc" class="field"></div>
+    <div id="abono-total" class="field"></div>
+    <div id="cantidad-letras" class="field"></div>
+    <div id="concepto-linea1" class="field"></div>
+    <div id="concepto-linea2" class="field"></div>
+    <div id="firma-cliente" class="field"></div>
+  </div>
+
+  <div id="printLayer" class="print-layer">
+    <div id="id-cliente-top" class="field"></div>
+    <div id="fecha-top" class="field"></div>
+
+    <div id="cuota-mensual" class="field"></div>
+
+    <div id="forma-pago" class="field"></div>
+    <div id="banco" class="field"></div>
+    <div id="fecha-abono" class="field"></div>
+    <div id="fecha-recibo" class="field"></div>
+
+    <div id="cliente-tel" class="field"></div>
+    <div id="codigo-lote" class="field"></div>
+    <div id="saldo-anterior" class="field"></div>
+    <div id="menos-prima" class="field"></div>
+    <div id="menos-abono" class="field"></div>
+    <div id="saldo-actual" class="field"></div>
+    <div id="saldo-acumulado" class="field"></div>
+  </div>
 </div>
+
+<div id="calibrationPanel" class="cal-panel is-hidden">
+  <h3>Calibracion por Campo 210x135</h3>
+  <p id="paperModeBadge" class="cal-help"></p>
+  <p class="cal-help">
+    Ajusta cada dato por separado. El fondo es solo visual para alinear rapido y no se imprime.
+  </p>
+
+  <div class="cal-title">Ajuste Global</div>
+  <div class="cal-row">
+    <div class="cal-field">
+      <label for="calOffsetX">Offset X (mm)</label>
+      <input id="calOffsetX" type="number" min="-30" max="30" step="0.1">
+    </div>
+    <div class="cal-field">
+      <label for="calOffsetY">Offset Y (mm)</label>
+      <input id="calOffsetY" type="number" min="-30" max="30" step="0.1">
+    </div>
+  </div>
+
+  <div class="cal-row">
+    <div class="cal-field">
+      <label for="calScaleX">Escala X</label>
+      <input id="calScaleX" type="number" min="0.90" max="1.10" step="0.001">
+    </div>
+    <div class="cal-field">
+      <label for="calScaleY">Escala Y</label>
+      <input id="calScaleY" type="number" min="0.90" max="1.10" step="0.001">
+    </div>
+  </div>
+
+  <div class="cal-title">Fondo Guia Visual</div>
+  <div class="cal-field" style="margin-bottom:8px;">
+    <label for="guideImageInput">Imagen base (local)</label>
+    <input id="guideImageInput" type="file" accept="image/*">
+  </div>
+
+  <div class="cal-guide-row">
+    <label for="guideVisible"><strong>Mostrar fondo</strong></label>
+    <input id="guideVisible" type="checkbox">
+  </div>
+
+  <div class="cal-field" style="margin-bottom:8px;">
+    <label for="guideOpacity">Opacidad (<span id="guideOpacityValue">0.40</span>)</label>
+    <input id="guideOpacity" type="range" min="0" max="1" step="0.05">
+  </div>
+
+  <div class="cal-actions" style="margin-top:0; margin-bottom:8px;">
+    <button id="btnLimpiarFondo" type="button">Limpiar fondo</button>
+  </div>
+
+  <div class="cal-title">Ajuste Por Dato (X/Y)</div>
+  <div id="fieldControls" class="cal-list"></div>
+
+  <div class="cal-actions">
+    <button id="btnGuardarCalibracion" class="primary" type="button">Guardar</button>
+    <button id="btnRestablecerCalibracion" type="button">Restablecer</button>
+    <button id="btnImprimirPrueba" type="button">Imprimir prueba</button>
+  </div>
+
+  <div id="calibrationStatus" class="cal-status"></div>
+</div>
+
 <script>
-// ===============================
-// CARGAR DATOS DEL RECIBO
-// ===============================
 const params = new URLSearchParams(window.location.search);
 const idPago = params.get('id_pago');
+const mode = params.get('mode') === 'calibrate' ? 'calibrate' : 'print';
+const paperMode = params.get('paper') === 'custom' ? 'custom' : 'a4';
+
+const CALIBRATION_KEY =
+  paperMode === 'a4'
+    ? 'lotifi.recibo.calibration.v6.a4'
+    : 'lotifi.recibo.calibration.v6.custom';
+
+const LEGACY_V5_KEY =
+  paperMode === 'a4'
+    ? 'lotifi.recibo.calibration.v5.a4'
+    : 'lotifi.recibo.calibration.v5.custom';
+
+const LEGACY_CALIBRATION_KEYS = [
+  'lotifi.recibo.calibration.v3.a4',
+  'lotifi.recibo.calibration.v3.custom',
+  'lotifi.recibo.calibration.v4.a4',
+  'lotifi.recibo.calibration.v4.custom',
+  'lotifi.recibo.calibration.v5.a4',
+  'lotifi.recibo.calibration.v5.custom'
+];
+
+const GUIDE_KEY =
+  paperMode === 'a4'
+    ? 'lotifi.recibo.guide.v1.a4'
+    : 'lotifi.recibo.guide.v1.custom';
+const DEFAULT_GUIDE_IMAGE_URL = 'Recibo.jpeg';
+
+const LIMITS = {
+  offsetMin: -30,
+  offsetMax: 30,
+  scaleMin: 0.9,
+  scaleMax: 1.1,
+  fieldMin: -30,
+  fieldMax: 30
+};
+
+const FIELD_LAYOUT_V2 = {
+  'id-cliente-top': { left: 44, top: 10 },
+  'fecha-top': { left: 188, top: 9 },
+  'cliente-nombre': { left: 36, top: 24, fontSize: '10pt' },
+  'cliente-direccion': { left: 36, top: 32 },
+  'cliente-doc': { left: 36, top: 40 },
+  'cliente-tel': { left: 176, top: 31 },
+  'codigo-lote': { left: 176, top: 23 },
+  'cuota-mensual': { left: 38, top: 52 },
+  'abono-total': { left: 38, top: 90, fontSize: '10pt' },
+  'forma-pago': { left: 104, top: 47 },
+  'banco': { left: 104, top: 55 },
+  'fecha-abono': { left: 104, top: 64.5 },
+  'fecha-recibo': { left: 104, top: 72.5 },
+  'saldo-anterior': { left: 180.5, top: 50 },
+  'menos-prima': { left: 180.5, top: 58 },
+  'menos-abono': { left: 180.5, top: 64 },
+  'saldo-actual': { left: 180.5, top: 72 },
+  'saldo-acumulado': { left: 180.5, top: 80 },
+  'cantidad-letras': { left: 36, top: 102, width: 168 },
+  'concepto-linea1': { left: 36, top: 110 },
+  'concepto-linea2': { left: 36, top: 118 },
+  'firma-cliente': { left: 36, top: 126 }
+};
+
+const FIELD_LABELS = {
+  'id-cliente-top': 'ID cliente (arriba)',
+  'fecha-top': 'Fecha (arriba)',
+  'cliente-nombre': 'Cliente nombre',
+  'cliente-direccion': 'Cliente direccion',
+  'cliente-doc': 'Documento cliente',
+  'cliente-tel': 'Telefono cliente',
+  'codigo-lote': 'Codigo lote',
+  'cuota-mensual': 'Cuota mensual',
+  'abono-total': 'Abono total',
+  'forma-pago': 'Forma de pago',
+  'banco': 'Banco',
+  'fecha-abono': 'Fecha abono',
+  'fecha-recibo': 'Fecha recibo',
+  'saldo-anterior': 'Saldo anterior',
+  'menos-prima': 'Menos prima',
+  'menos-abono': 'Menos abono',
+  'saldo-actual': 'Saldo actual',
+  'saldo-acumulado': 'Saldo acumulado',
+  'cantidad-letras': 'Cantidad en letras',
+  'concepto-linea1': 'Concepto linea 1',
+  'concepto-linea2': 'Concepto linea 2',
+  'firma-cliente': 'Firma cliente'
+};
+
+const FIELD_ORDER = [
+  'id-cliente-top',
+  'fecha-top',
+  'cliente-nombre',
+  'cliente-direccion',
+  'cliente-doc',
+  'cliente-tel',
+  'codigo-lote',
+  'cuota-mensual',
+  'abono-total',
+  'forma-pago',
+  'banco',
+  'fecha-abono',
+  'fecha-recibo',
+  'saldo-anterior',
+  'menos-prima',
+  'menos-abono',
+  'saldo-actual',
+  'saldo-acumulado',
+  'cantidad-letras',
+  'concepto-linea1',
+  'concepto-linea2',
+  'firma-cliente'
+];
+
+const LEGACY_BLOCK_FIELDS = {
+  block1: ['id-cliente-top', 'cliente-nombre', 'cliente-direccion', 'cliente-doc'],
+  block2: ['cuota-mensual'],
+  block3: ['abono-total', 'cantidad-letras', 'concepto-linea1', 'concepto-linea2', 'firma-cliente'],
+  block4: ['forma-pago', 'banco', 'fecha-abono', 'fecha-recibo'],
+  block5: ['codigo-lote', 'cliente-tel'],
+  block6: ['saldo-anterior', 'menos-prima', 'menos-abono', 'saldo-actual', 'saldo-acumulado']
+};
+
+const DEFAULT_GUIDE = {
+  enabled: true,
+  opacity: 0.4,
+  imageDataUrl: ''
+};
+
+applyPaperMode();
+applyFieldLayout();
+buildFieldControls();
+
+let currentCalibration = loadCalibration();
+applyCalibration(currentCalibration);
+
+let guideConfig = loadGuideConfig();
+applyGuideConfig(guideConfig);
+
+setupCalibrationMode();
+
 if (!idPago) {
   alert('Falta id_pago');
+  throw new Error('Parametro id_pago requerido');
 }
+
 fetch(`http://localhost:3000/api/recibos/pago/${idPago}`)
-  .then(res => res.json())
+  .then(res => {
+    if (!res.ok) {
+      throw new Error('No se pudo cargar el recibo');
+    }
+    return res.json();
+  })
   .then(data => {
-    // CLIENTE
-    document.getElementById('cliente-nombre').innerText = data.cliente.nombre;
-    document.getElementById('cliente-direccion').innerText = data.cliente.direccion;
-    document.getElementById('cliente-doc').innerText = data.cliente.documento;
-    document.getElementById('cliente-tel').innerText = data.cliente.telefono;
-    document.getElementById('codigo-lote').innerText = data.cliente.codigo_lote || '';
-    // PAGO
-    document.getElementById('cuota-mensual').innerText =
-      `$${data.pago.cuota_mensual.toFixed(2)}`;
-    document.getElementById('abono-total').innerText =
-      `$${data.pago.abono_total.toFixed(2)}`;
-    document.getElementById('forma-pago').innerText = data.pago.forma_pago;
-    document.getElementById('banco').innerText = data.pago.banco || '';
-    document.getElementById('fecha-abono').innerText =
-      formatFecha(data.pago.fecha_abono);
-    document.getElementById('fecha-recibo').innerText =
-      formatFecha(data.pago.fecha_recibo);
-    // SALDOS
-    document.getElementById('saldo-anterior').innerText =
-      `$${data.saldos.saldo_anterior.toFixed(2)}`;
-    document.getElementById('menos-abono').innerText =
-      `$${data.saldos.menos_abono.toFixed(2)}`;
-    document.getElementById('saldo-actual').innerText =
-      `$${data.saldos.saldo_actual.toFixed(2)}`;
-    document.getElementById('saldo-acumulado').innerText =
-      `$${data.saldos.saldo_acumulado.toFixed(2)}`;
-    // TEXTO
-    document.getElementById('cantidad-letras').innerText =
-      data.texto.cantidad_letras;
-    document.getElementById('concepto-linea1').innerText =
-      data.texto.concepto[0];
-    document.getElementById('concepto-linea2').innerText =
-      data.texto.concepto[1];
-    // FIRMA
-    document.getElementById('firma-cliente').innerText =
-      data.cliente.nombre;
-    // IMPRIMIR AUTOMÁTICO
-    setTimeout(() => window.print(), 500);
-    // CERRAR DESPUÉS DE IMPRIMIR
-    window.onafterprint = () => {
-    window.close();
-};
+    renderRecibo(data);
+
+    if (mode === 'print') {
+      setTimeout(() => window.print(), 400);
+      window.onafterprint = () => window.close();
+    }
+  })
+  .catch(error => {
+    console.error(error);
+    alert('Error al generar el recibo');
   });
+
+function renderRecibo(data) {
+  document.getElementById('id-cliente-top').innerText = String(data.cliente.id_cliente || '');
+  document.getElementById('fecha-top').innerText = formatFecha(data.pago.fecha_abono);
+
+  document.getElementById('cliente-nombre').innerText = data.cliente.nombre;
+  document.getElementById('cliente-direccion').innerText = data.cliente.direccion;
+  document.getElementById('cliente-doc').innerText = data.cliente.documento;
+  document.getElementById('cliente-tel').innerText = data.cliente.telefono;
+  document.getElementById('codigo-lote').innerText = data.cliente.codigo_lote || '';
+
+  document.getElementById('cuota-mensual').innerText = formatMoney(data.pago.cuota_mensual);
+  document.getElementById('abono-total').innerText = formatMoney(data.pago.abono_total);
+  document.getElementById('forma-pago').innerText = data.pago.forma_pago || '';
+  document.getElementById('banco').innerText = data.pago.banco || '';
+  document.getElementById('fecha-abono').innerText = formatFecha(data.pago.fecha_abono);
+  document.getElementById('fecha-recibo').innerText = formatFecha(data.pago.fecha_recibo);
+
+  document.getElementById('saldo-anterior').innerText = formatMoney(data.saldos.saldo_anterior);
+  document.getElementById('menos-prima').innerText = formatMoney(data.saldos.menos_prima ?? 0);
+  document.getElementById('menos-abono').innerText = formatMoney(data.saldos.menos_abono);
+  document.getElementById('saldo-actual').innerText = formatMoney(data.saldos.saldo_actual);
+  document.getElementById('saldo-acumulado').innerText = formatMoney(data.saldos.saldo_acumulado);
+
+  document.getElementById('cantidad-letras').innerText = data.texto.cantidad_letras || '';
+  document.getElementById('concepto-linea1').innerText = data.texto.concepto?.[0] || '';
+  document.getElementById('concepto-linea2').innerText = data.texto.concepto?.[1] || '';
+  document.getElementById('firma-cliente').innerText = data.cliente.nombre || '';
+}
+
+function formatMoney(value) {
+  const num = Number(value || 0);
+  return `$${num.toFixed(2)}`;
+}
+
 function formatFecha(fecha) {
   if (!fecha) return '';
   const d = new Date(fecha);
+  if (Number.isNaN(d.getTime())) return '';
+
   return d.toLocaleDateString('es-SV', {
     day: '2-digit',
     month: 'short',
     year: 'numeric'
   });
 }
+
+function applyPaperMode() {
+  const body = document.body;
+  const badge = document.getElementById('paperModeBadge');
+
+  if (paperMode === 'a4') {
+    body.classList.add('paper-a4');
+    body.classList.remove('paper-custom');
+    injectPageStyle('@page { size: A4; margin: 0; }');
+    if (badge) badge.innerText = 'Modo papel: A4 (recomendado para evitar tamano personalizado).';
+    return;
+  }
+
+  body.classList.add('paper-custom');
+  body.classList.remove('paper-a4');
+  injectPageStyle('@page { size: 210mm 135mm; margin: 0; }');
+  if (badge) badge.innerText = 'Modo papel: 210x135 personalizado.';
+}
+
+function injectPageStyle(cssRule) {
+  const existing = document.getElementById('dynamicPageMode');
+  if (existing) existing.remove();
+
+  const style = document.createElement('style');
+  style.id = 'dynamicPageMode';
+  style.textContent = cssRule;
+  document.head.appendChild(style);
+}
+
+function buildFieldControls() {
+  const container = document.getElementById('fieldControls');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  FIELD_ORDER.forEach(fieldId => {
+    const item = document.createElement('div');
+    item.className = 'cal-item';
+
+    const name = document.createElement('div');
+    name.className = 'cal-item-name';
+    name.innerText = FIELD_LABELS[fieldId] || fieldId;
+    item.appendChild(name);
+
+    const row = document.createElement('div');
+    row.className = 'cal-row';
+
+    const colX = document.createElement('div');
+    colX.className = 'cal-field';
+
+    const labelX = document.createElement('label');
+    labelX.setAttribute('for', `calFieldX-${fieldId}`);
+    labelX.innerText = 'X (mm)';
+
+    const inputX = document.createElement('input');
+    inputX.id = `calFieldX-${fieldId}`;
+    inputX.type = 'number';
+    inputX.min = String(LIMITS.fieldMin);
+    inputX.max = String(LIMITS.fieldMax);
+    inputX.step = '0.1';
+    inputX.dataset.fieldId = fieldId;
+    inputX.dataset.axis = 'x';
+
+    colX.appendChild(labelX);
+    colX.appendChild(inputX);
+
+    const colY = document.createElement('div');
+    colY.className = 'cal-field';
+
+    const labelY = document.createElement('label');
+    labelY.setAttribute('for', `calFieldY-${fieldId}`);
+    labelY.innerText = 'Y (mm)';
+
+    const inputY = document.createElement('input');
+    inputY.id = `calFieldY-${fieldId}`;
+    inputY.type = 'number';
+    inputY.min = String(LIMITS.fieldMin);
+    inputY.max = String(LIMITS.fieldMax);
+    inputY.step = '0.1';
+    inputY.dataset.fieldId = fieldId;
+    inputY.dataset.axis = 'y';
+
+    colY.appendChild(labelY);
+    colY.appendChild(inputY);
+
+    row.appendChild(colX);
+    row.appendChild(colY);
+    item.appendChild(row);
+
+    container.appendChild(item);
+  });
+}
+
+function setupCalibrationMode() {
+  const panel = document.getElementById('calibrationPanel');
+  const toggleBtn = document.getElementById('btnToggleCalibracion');
+  if (!panel || !toggleBtn) return;
+
+  if (mode !== 'calibrate') {
+    panel.classList.add('is-hidden');
+    toggleBtn.classList.add('is-hidden');
+    const layer = document.getElementById('guideLayer');
+    if (layer) layer.classList.add('is-hidden');
+    return;
+  }
+
+  panel.classList.remove('is-hidden');
+  toggleBtn.classList.remove('is-hidden');
+  fillCalibrationInputs(currentCalibration);
+  fillGuideInputs(guideConfig);
+
+  toggleBtn.addEventListener('click', () => {
+    const hidden = panel.classList.toggle('is-hidden');
+    toggleBtn.innerText = hidden ? 'Mostrar calibracion' : 'Ocultar calibracion';
+  });
+
+  const globalInputIds = ['calOffsetX', 'calOffsetY', 'calScaleX', 'calScaleY'];
+  globalInputIds.forEach(id => {
+    const input = document.getElementById(id);
+    if (input) input.addEventListener('input', previewCalibration);
+  });
+
+  FIELD_ORDER.forEach(fieldId => {
+    const inputX = document.getElementById(`calFieldX-${fieldId}`);
+    const inputY = document.getElementById(`calFieldY-${fieldId}`);
+    if (inputX) inputX.addEventListener('input', previewCalibration);
+    if (inputY) inputY.addEventListener('input', previewCalibration);
+  });
+
+  document.getElementById('btnGuardarCalibracion').addEventListener('click', guardarCalibracion);
+  document.getElementById('btnRestablecerCalibracion').addEventListener('click', restablecerCalibracion);
+  document.getElementById('btnImprimirPrueba').addEventListener('click', () => window.print());
+
+  setupGuideEvents();
+
+  setStatus('Modo calibracion por campo activo.');
+}
+
+function fillCalibrationInputs(calibration) {
+  const safe = sanitizeCalibration(calibration);
+  document.getElementById('calOffsetX').value = safe.offsetX.toFixed(2);
+  document.getElementById('calOffsetY').value = safe.offsetY.toFixed(2);
+  document.getElementById('calScaleX').value = safe.scaleX.toFixed(3);
+  document.getElementById('calScaleY').value = safe.scaleY.toFixed(3);
+
+  FIELD_ORDER.forEach(fieldId => {
+    const field = safe.fields[fieldId] || { x: 0, y: 0 };
+    const inputX = document.getElementById(`calFieldX-${fieldId}`);
+    const inputY = document.getElementById(`calFieldY-${fieldId}`);
+    if (inputX) inputX.value = field.x.toFixed(2);
+    if (inputY) inputY.value = field.y.toFixed(2);
+  });
+}
+
+function previewCalibration() {
+  const result = readCalibrationFromInputs();
+  if (!result.ok) {
+    setStatus(result.error, true);
+    return;
+  }
+
+  applyCalibration(result.value);
+  setStatus('');
+}
+
+function guardarCalibracion() {
+  const result = readCalibrationFromInputs();
+  if (!result.ok) {
+    setStatus(result.error, true);
+    return;
+  }
+
+  currentCalibration = result.value;
+  saveCalibration(currentCalibration);
+  applyCalibration(currentCalibration);
+  setStatus('Calibracion guardada.');
+}
+
+function restablecerCalibracion() {
+  currentCalibration = createDefaultCalibration();
+  clearCalibration();
+  clearLegacyCalibrationKeys();
+  saveCalibration(currentCalibration);
+  applyCalibration(currentCalibration);
+  fillCalibrationInputs(currentCalibration);
+  setStatus('Calibracion restablecida.');
+}
+
+function readCalibrationFromInputs() {
+  const calibration = createDefaultCalibration();
+  calibration.offsetX = parseInputNumber(document.getElementById('calOffsetX').value);
+  calibration.offsetY = parseInputNumber(document.getElementById('calOffsetY').value);
+  calibration.scaleX = parseInputNumber(document.getElementById('calScaleX').value);
+  calibration.scaleY = parseInputNumber(document.getElementById('calScaleY').value);
+
+  const validations = [
+    validateRange(calibration.offsetX, LIMITS.offsetMin, LIMITS.offsetMax, 'Offset X invalido.'),
+    validateRange(calibration.offsetY, LIMITS.offsetMin, LIMITS.offsetMax, 'Offset Y invalido.'),
+    validateRange(calibration.scaleX, LIMITS.scaleMin, LIMITS.scaleMax, 'Escala X invalida.'),
+    validateRange(calibration.scaleY, LIMITS.scaleMin, LIMITS.scaleMax, 'Escala Y invalida.')
+  ];
+
+  FIELD_ORDER.forEach(fieldId => {
+    const x = parseInputNumber(document.getElementById(`calFieldX-${fieldId}`).value);
+    const y = parseInputNumber(document.getElementById(`calFieldY-${fieldId}`).value);
+
+    calibration.fields[fieldId] = { x, y };
+
+    validations.push(validateRange(x, LIMITS.fieldMin, LIMITS.fieldMax, `${FIELD_LABELS[fieldId] || fieldId} X invalido.`));
+    validations.push(validateRange(y, LIMITS.fieldMin, LIMITS.fieldMax, `${FIELD_LABELS[fieldId] || fieldId} Y invalido.`));
+  });
+
+  const invalid = validations.find(v => !v.ok);
+  if (invalid) {
+    return invalid;
+  }
+
+  return { ok: true, value: calibration };
+}
+
+function parseInputNumber(raw) {
+  if (typeof raw !== 'string') {
+    return Number(raw);
+  }
+  return Number(raw.trim().replace(',', '.'));
+}
+
+function validateRange(value, min, max, invalidMessage) {
+  if (!Number.isFinite(value)) {
+    return { ok: false, error: invalidMessage };
+  }
+
+  if (value < min || value > max) {
+    return { ok: false, error: `${invalidMessage} Rango: ${min} a ${max}.` };
+  }
+
+  return { ok: true };
+}
+
+function applyCalibration(calibration) {
+  const safe = sanitizeCalibration(calibration);
+  const root = document.documentElement;
+  root.style.setProperty('--offset-x-mm', `${safe.offsetX.toFixed(2)}mm`);
+  root.style.setProperty('--offset-y-mm', `${safe.offsetY.toFixed(2)}mm`);
+  root.style.setProperty('--scale-x', safe.scaleX.toFixed(4));
+  root.style.setProperty('--scale-y', safe.scaleY.toFixed(4));
+
+  applyFieldOffsets(safe.fields);
+}
+
+function applyFieldOffsets(fields) {
+  FIELD_ORDER.forEach(fieldId => {
+    const el = document.getElementById(fieldId);
+    if (!el) return;
+
+    const offset = fields?.[fieldId] || { x: 0, y: 0 };
+    const x = Number(offset.x || 0);
+    const y = Number(offset.y || 0);
+    el.style.transform = `translate(${x.toFixed(2)}mm, ${y.toFixed(2)}mm)`;
+  });
+}
+
+function createDefaultFields() {
+  const fields = {};
+  FIELD_ORDER.forEach(fieldId => {
+    fields[fieldId] = { x: 0, y: 0 };
+  });
+  return fields;
+}
+
+function createDefaultCalibration() {
+  return {
+    offsetX: 0,
+    offsetY: 0,
+    scaleX: 1,
+    scaleY: 1,
+    fields: createDefaultFields()
+  };
+}
+
+function loadCalibration() {
+  try {
+    const rawCurrent = localStorage.getItem(CALIBRATION_KEY);
+    if (rawCurrent) {
+      return sanitizeCalibration(JSON.parse(rawCurrent));
+    }
+
+    const rawLegacy = localStorage.getItem(LEGACY_V5_KEY);
+    if (rawLegacy) {
+      const migrated = migrateV5ToV6(JSON.parse(rawLegacy));
+      saveCalibration(migrated);
+      return migrated;
+    }
+
+    return createDefaultCalibration();
+  } catch (error) {
+    console.warn('No se pudo cargar calibracion local:', error);
+    return createDefaultCalibration();
+  }
+}
+
+function saveCalibration(calibration) {
+  const safe = sanitizeCalibration(calibration);
+  localStorage.setItem(CALIBRATION_KEY, JSON.stringify(safe));
+}
+
+function clearCalibration() {
+  localStorage.removeItem(CALIBRATION_KEY);
+}
+
+function sanitizeCalibration(raw) {
+  const safe = createDefaultCalibration();
+
+  safe.offsetX = clampNumber(Number(raw?.offsetX), LIMITS.offsetMin, LIMITS.offsetMax, 0);
+  safe.offsetY = clampNumber(Number(raw?.offsetY), LIMITS.offsetMin, LIMITS.offsetMax, 0);
+  safe.scaleX = clampNumber(Number(raw?.scaleX), LIMITS.scaleMin, LIMITS.scaleMax, 1);
+  safe.scaleY = clampNumber(Number(raw?.scaleY), LIMITS.scaleMin, LIMITS.scaleMax, 1);
+
+  FIELD_ORDER.forEach(fieldId => {
+    const rawField = raw?.fields?.[fieldId] || {};
+    safe.fields[fieldId] = {
+      x: clampNumber(Number(rawField.x), LIMITS.fieldMin, LIMITS.fieldMax, 0),
+      y: clampNumber(Number(rawField.y), LIMITS.fieldMin, LIMITS.fieldMax, 0)
+    };
+  });
+
+  return safe;
+}
+
+function migrateV5ToV6(legacyRaw) {
+  const legacy = sanitizeLegacyV5(legacyRaw);
+  const migrated = createDefaultCalibration();
+
+  migrated.offsetX = legacy.offsetX;
+  migrated.offsetY = legacy.offsetY;
+  migrated.scaleX = legacy.scaleX;
+  migrated.scaleY = legacy.scaleY;
+
+  Object.entries(LEGACY_BLOCK_FIELDS).forEach(([blockKey, fieldIds]) => {
+    const x = legacy[`${blockKey}X`] || 0;
+    const y = legacy[`${blockKey}Y`] || 0;
+    const gap = legacy[`${blockKey}Gap`] || 0;
+
+    fieldIds.forEach((fieldId, index) => {
+      migrated.fields[fieldId] = {
+        x,
+        y: y + (index * gap)
+      };
+    });
+  });
+
+  return sanitizeCalibration(migrated);
+}
+
+function sanitizeLegacyV5(raw) {
+  const safe = {
+    offsetX: clampNumber(Number(raw?.offsetX), LIMITS.offsetMin, LIMITS.offsetMax, 0),
+    offsetY: clampNumber(Number(raw?.offsetY), LIMITS.offsetMin, LIMITS.offsetMax, 0),
+    scaleX: clampNumber(Number(raw?.scaleX), LIMITS.scaleMin, LIMITS.scaleMax, 1),
+    scaleY: clampNumber(Number(raw?.scaleY), LIMITS.scaleMin, LIMITS.scaleMax, 1)
+  };
+
+  for (let i = 1; i <= 6; i += 1) {
+    safe[`block${i}X`] = clampNumber(Number(raw?.[`block${i}X`]), LIMITS.fieldMin, LIMITS.fieldMax, 0);
+    safe[`block${i}Y`] = clampNumber(Number(raw?.[`block${i}Y`]), LIMITS.fieldMin, LIMITS.fieldMax, 0);
+    safe[`block${i}Gap`] = clampNumber(Number(raw?.[`block${i}Gap`]), LIMITS.fieldMin, LIMITS.fieldMax, 0);
+  }
+
+  return safe;
+}
+
+function clampNumber(value, min, max, fallback) {
+  if (!Number.isFinite(value)) return fallback;
+  if (value < min) return min;
+  if (value > max) return max;
+  return value;
+}
+
+function setStatus(text, isError = false) {
+  const status = document.getElementById('calibrationStatus');
+  if (!status) return;
+
+  status.style.color = isError ? '#b91c1c' : '#0f766e';
+  status.innerText = text || '';
+}
+
+function applyFieldLayout() {
+  Object.entries(FIELD_LAYOUT_V2).forEach(([id, layout]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.style.left = `${layout.left}mm`;
+    el.style.top = `${layout.top}mm`;
+
+    if (typeof layout.width === 'number') {
+      el.style.width = `${layout.width}mm`;
+    } else {
+      el.style.removeProperty('width');
+    }
+
+    if (typeof layout.fontSize === 'string') {
+      el.style.fontSize = layout.fontSize;
+    } else {
+      el.style.removeProperty('font-size');
+    }
+  });
+}
+
+function clearLegacyCalibrationKeys() {
+  LEGACY_CALIBRATION_KEYS.forEach(key => {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.warn('No se pudo limpiar calibracion legacy:', key, error);
+    }
+  });
+}
+
+function setupGuideEvents() {
+  const fileInput = document.getElementById('guideImageInput');
+  const visibleInput = document.getElementById('guideVisible');
+  const opacityInput = document.getElementById('guideOpacity');
+  const clearBtn = document.getElementById('btnLimpiarFondo');
+
+  if (fileInput) {
+    fileInput.addEventListener('change', onGuideFileChange);
+  }
+
+  if (visibleInput) {
+    visibleInput.addEventListener('change', () => {
+      guideConfig.enabled = Boolean(visibleInput.checked);
+      saveGuideConfig(guideConfig);
+      applyGuideConfig(guideConfig);
+    });
+  }
+
+  if (opacityInput) {
+    opacityInput.addEventListener('input', () => {
+      guideConfig.opacity = clampNumber(parseInputNumber(opacityInput.value), 0, 1, DEFAULT_GUIDE.opacity);
+      saveGuideConfig(guideConfig);
+      applyGuideConfig(guideConfig);
+      fillGuideInputs(guideConfig);
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      guideConfig = {
+        enabled: false,
+        opacity: guideConfig.opacity,
+        imageDataUrl: ''
+      };
+      saveGuideConfig(guideConfig);
+      applyGuideConfig(guideConfig);
+      fillGuideInputs(guideConfig);
+      if (fileInput) fileInput.value = '';
+      setStatus('Fondo visual limpiado.');
+    });
+  }
+}
+
+function onGuideFileChange(event) {
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = String(e?.target?.result || '');
+    if (!dataUrl.startsWith('data:image/')) {
+      setStatus('Archivo de fondo invalido.', true);
+      return;
+    }
+
+    guideConfig.imageDataUrl = dataUrl;
+    guideConfig.enabled = true;
+    saveGuideConfig(guideConfig);
+    applyGuideConfig(guideConfig);
+    fillGuideInputs(guideConfig);
+    setStatus('Fondo visual cargado.');
+  };
+
+  reader.onerror = () => {
+    setStatus('No se pudo leer la imagen de fondo.', true);
+  };
+
+  reader.readAsDataURL(file);
+}
+
+function fillGuideInputs(config) {
+  const visibleInput = document.getElementById('guideVisible');
+  const opacityInput = document.getElementById('guideOpacity');
+  const opacityText = document.getElementById('guideOpacityValue');
+
+  if (visibleInput) {
+    visibleInput.checked = Boolean(config.enabled);
+  }
+
+  if (opacityInput) {
+    opacityInput.value = String(config.opacity.toFixed(2));
+  }
+
+  if (opacityText) {
+    opacityText.innerText = config.opacity.toFixed(2);
+  }
+}
+
+function loadGuideConfig() {
+  try {
+    const raw = localStorage.getItem(GUIDE_KEY);
+    if (!raw) return { ...DEFAULT_GUIDE };
+    return sanitizeGuideConfig(JSON.parse(raw));
+  } catch (error) {
+    console.warn('No se pudo cargar guia visual:', error);
+    return { ...DEFAULT_GUIDE };
+  }
+}
+
+function saveGuideConfig(config) {
+  const safe = sanitizeGuideConfig(config);
+  localStorage.setItem(GUIDE_KEY, JSON.stringify(safe));
+}
+
+function sanitizeGuideConfig(raw) {
+  return {
+    enabled: Boolean(raw?.enabled),
+    opacity: clampNumber(Number(raw?.opacity), 0, 1, DEFAULT_GUIDE.opacity),
+    imageDataUrl: typeof raw?.imageDataUrl === 'string' ? raw.imageDataUrl : ''
+  };
+}
+
+function applyGuideConfig(config) {
+  const layer = document.getElementById('guideLayer');
+  const image = document.getElementById('guideImage');
+  if (!layer || !image) return;
+
+  if (mode !== 'calibrate') {
+    layer.classList.add('is-hidden');
+    return;
+  }
+
+  const safe = sanitizeGuideConfig(config);
+  const source = safe.imageDataUrl || DEFAULT_GUIDE_IMAGE_URL;
+
+  if (!source) {
+    image.removeAttribute('src');
+    layer.classList.add('is-hidden');
+    return;
+  }
+
+  image.src = source;
+  image.style.opacity = safe.opacity.toFixed(2);
+
+  image.onerror = () => {
+    layer.classList.add('is-hidden');
+    if (!safe.imageDataUrl) {
+      setStatus('No se encontro Recibo.jpeg en frontend para el fondo guia.', true);
+    }
+  };
+
+  if (safe.enabled) {
+    layer.classList.remove('is-hidden');
+  } else {
+    layer.classList.add('is-hidden');
+  }
+}
 </script>
 </body>
 </html>
+

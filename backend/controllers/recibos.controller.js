@@ -42,6 +42,7 @@ exports.obtenerReciboPorPago = async (req, res) => {
       SELECT
         ct.monto_financiado,
         ct.prima,
+        cl.id_cliente,
         cl.nombres,
         cl.direccion,
         cl.dui,
@@ -117,6 +118,7 @@ exports.obtenerReciboPorPago = async (req, res) => {
     res.json({
 
       cliente: {
+        id_cliente: contrato.id_cliente,
         nombre: contrato.nombres,
         direccion: contrato.direccion || '',
         documento: [contrato.dui, contrato.nit]
@@ -138,6 +140,7 @@ exports.obtenerReciboPorPago = async (req, res) => {
 },
       saldos: {
         saldo_anterior: saldoAnterior,
+        menos_prima: 0,
         menos_abono: Number(pago.abono_capital),
         saldo_actual: saldoActual,
         saldo_acumulado: saldoAcumulado

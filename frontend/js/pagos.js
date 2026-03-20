@@ -640,6 +640,8 @@ try {
       idPagoActual = result.id_pago;
 
       document.getElementById('btnImprimirRecibo').disabled = false;
+      const btnCalibrarRecibo = document.getElementById('btnCalibrarRecibo');
+      if (btnCalibrarRecibo) btnCalibrarRecibo.disabled = false;
       document.getElementById('modalPagoId').innerText = result.id_pago;
       document.getElementById('modalRecibo').innerText = data.numero_recibo;
 
@@ -686,7 +688,7 @@ document.getElementById('btnAdjuntarComprobante')
       document.getElementById('modalComprobante')
     ).show();
   });
- document
+document
   .getElementById('btnImprimirRecibo')
   ?.addEventListener('click', function () {
 
@@ -698,7 +700,21 @@ document.getElementById('btnAdjuntarComprobante')
     this.disabled = true;
 
     window.open(
-      `recibo-print.html?id_pago=${idPagoActual}`,
+      `recibo-print.html?id_pago=${idPagoActual}&mode=print&paper=a4`,
+      '_blank'
+    );
+  });
+document
+  .getElementById('btnCalibrarRecibo')
+  ?.addEventListener('click', function () {
+
+    if (!idPagoActual) {
+      alert('No hay pago para calibrar');
+      return;
+    }
+
+    window.open(
+      `recibo-print.html?id_pago=${idPagoActual}&mode=calibrate&paper=a4`,
       '_blank'
     );
   });

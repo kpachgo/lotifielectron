@@ -121,52 +121,72 @@ function renderPagosReporte(pagos) {
 
   if (!pagos || pagos.length === 0) {
     tbody.innerHTML =
-      `<tr><td colspan="6" class="text-center text-muted">Sin pagos</td></tr>`;
+      `<tr><td colspan="7" class="text-center text-muted">Sin pagos</td></tr>`;
     return;
   }
 
   pagos.forEach(p => {
-  tbody.innerHTML += `
-    <tr>
-      <td>${new Date(p.fecha_abono).toLocaleDateString()}</td>
-      <td>$${Number(p.monto_total).toFixed(2)}</td>
-      <td>${p.forma_pago || '—'}</td>
-      <td>${p.banco || '—'}</td>
-      <td>${p.fecha_recibo ? new Date(p.fecha_recibo).toLocaleDateString() : '—'}</td>
+    tbody.innerHTML += `
+      <tr>
+        <td>${new Date(p.fecha_abono).toLocaleDateString()}</td>
+        <td>$${Number(p.monto_total).toFixed(2)}</td>
+        <td>${p.forma_pago || '-'}</td>
+        <td>${p.banco || '-'}</td>
+        <td>${p.fecha_recibo ? new Date(p.fecha_recibo).toLocaleDateString() : '-'}</td>
 
-      <!-- COMPROBANTE -->
-      <td class="text-center">
-        ${
-          p.ruta_archivo
-            ? `<button
-                 class="btn btn-sm btn-outline-primary btn-ver-comprobante"
-                 data-ruta="${p.ruta_archivo}">
-                 Ver
-               </button>`
-            : '—'
-        }
-      </td>
+        <!-- COMPROBANTE -->
+        <td class="text-center">
+          ${
+            p.ruta_archivo
+              ? `<button
+                   class="btn btn-sm btn-outline-primary btn-ver-comprobante"
+                   data-ruta="${p.ruta_archivo}">
+                   Ver
+                 </button>`
+              : '-'
+          }
+        </td>
 
-      <!-- IMPRIMIR -->
-      <td class="text-center">
-        <button
-          class="btn btn-sm btn-success"
-          onclick="imprimirPago(${p.id_pago})">
-          🖨️
-        </button>
-      </td>
-    </tr>
-  `;
-});
+        <!-- IMPRIMIR -->
+        <td class="text-center">
+          <div class="d-flex gap-1 justify-content-center">
+            <button
+              class="btn btn-sm btn-success"
+              onclick="imprimirPago(${p.id_pago})">
+              Imprimir
+            </button>
+            <button
+              class="btn btn-sm btn-outline-primary"
+              onclick="calibrarImpresionPago(${p.id_pago})">
+              Calibrar
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
 }
+
 function imprimirPago(idPago) {
   if (!idPago) {
-    alert('No se encontró el pago para imprimir');
+    alert('No se encontro el pago para imprimir');
     return;
   }
 
   window.open(
-    `recibo-print.html?id_pago=${idPago}`,
+    `recibo-print.html?id_pago=${idPago}&mode=print&paper=a4`,
+    '_blank'
+  );
+}
+
+function calibrarImpresionPago(idPago) {
+  if (!idPago) {
+    alert('No se encontro el pago para calibrar');
+    return;
+  }
+
+  window.open(
+    `recibo-print.html?id_pago=${idPago}&mode=calibrate&paper=a4`,
     '_blank'
   );
 }

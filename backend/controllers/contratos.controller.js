@@ -4,6 +4,13 @@ const TIPOS_FINANCIAMIENTO_VALIDOS = new Set([
   'penalizacion_fija',
   'sin_interes'
 ]);
+const MODO_CALCULO_POR_PLAZO = 'por_plazo';
+const MODO_CALCULO_POR_CUOTA = 'por_cuota';
+const MODOS_CALCULO_VALIDOS = new Set([
+  MODO_CALCULO_POR_PLAZO,
+  MODO_CALCULO_POR_CUOTA
+]);
+const MAX_PLAZO_POR_CUOTA = 180;
 
 function round2(value) {
   return Number(Number(value || 0).toFixed(2));
@@ -103,11 +110,127 @@ function generarPlanCapital({
 
     plan.push({
       numero_cuota: i,
+      monto_cuota: cuota,
       capital_programado: capitalMes
     });
   }
 
   return plan;
+}
+
+function generarPlanDesdeCuota({
+  montoFinanciado,
+  cuotaBase,
+  tipoFinanciamiento,
+  tasaInteresAnual
+}) {
+  const monto = round2(montoFinanciado);
+  const cuota = round2(cuotaBase);
+
+  if (monto <= 0) {
+    return {
+      ok: false,
+      error: 'Monto financiado invalido'
+    };
+  }
+
+  if (cuota <= 0) {
+    return {
+      ok: false,
+      error: 'Cuota invalida para modo por cuota'
+    };
+  }
+
+  if (
+    tipoFinanciamiento === 'penalizacion_fija'
+    || tipoFinanciamiento === 'sin_interes'
+  ) {
+    const plazo = Math.ceil(monto / cuota);
+    if (plazo > MAX_PLAZO_POR_CUOTA) {
+      return {
+        ok: false,
+        error: `El plan supera el maximo permitido de ${MAX_PLAZO_POR_CUOTA} meses`
+      };
+    }
+
+    const plan = [];
+    let saldo = round2(monto);
+    for (let i = 1; i <= plazo; i += 1) {
+      const montoCuota = i === plazo ? round2(saldo) : cuota;
+      const capitalMes = round2(montoCuota);
+      saldo = round2(saldo - capitalMes);
+      plan.push({
+        numero_cuota: i,
+        monto_cuota: montoCuota,
+        capital_programado: capitalMes
+      });
+    }
+
+    return {
+      ok: true,
+      plazoMeses: plazo,
+      cuotaContrato: cuota,
+      plan
+    };
+  }
+
+  const tasaMensual = Number(tasaInteresAnual || 16) / 100 / 12;
+  if (tasaMensual > 0) {
+    const interesPrimerMes = round2(monto * tasaMensual);
+    if (cuota <= interesPrimerMes) {
+      return {
+        ok: false,
+        error: 'Cuota demasiado baja para interes_saldo'
+      };
+    }
+  }
+
+  const plan = [];
+  let saldo = round2(monto);
+
+  for (let i = 1; i <= MAX_PLAZO_POR_CUOTA; i += 1) {
+    const interesMes = tasaMensual > 0 ? round2(saldo * tasaMensual) : 0;
+    const capitalMes = round2(cuota - interesMes);
+
+    if (capitalMes <= 0) {
+      return {
+        ok: false,
+        error: 'Cuota demasiado baja para amortizar capital'
+      };
+    }
+
+    if (capitalMes >= saldo) {
+      const montoCuotaFinal = round2(saldo + interesMes);
+      plan.push({
+        numero_cuota: i,
+        monto_cuota: montoCuotaFinal,
+        capital_programado: saldo
+      });
+      saldo = 0;
+      break;
+    }
+
+    plan.push({
+      numero_cuota: i,
+      monto_cuota: cuota,
+      capital_programado: capitalMes
+    });
+    saldo = round2(saldo - capitalMes);
+  }
+
+  if (saldo > 0) {
+    return {
+      ok: false,
+      error: `El plan supera el maximo permitido de ${MAX_PLAZO_POR_CUOTA} meses`
+    };
+  }
+
+  return {
+    ok: true,
+    plazoMeses: plan.length,
+    cuotaContrato: cuota,
+    plan
+  };
 }
 
 // BUSCAR CLIENTE
@@ -208,10 +331,12 @@ exports.crearContrato = async (req, res) => {
       id_cliente,
       id_lote,
       tipo_financiamiento,
+      modo_calculo,
       precio_total,
       prima,
       monto_financiado,
       plazo_meses,
+      cuota,
       fecha_inicio,
       tasa_interes_anual,
       penalizacion_fija,
@@ -227,6 +352,11 @@ exports.crearContrato = async (req, res) => {
     }
     if (!TIPOS_FINANCIAMIENTO_VALIDOS.has(tipo_financiamiento)) {
       return res.status(400).json({ error: 'Tipo de financiamiento invalido' });
+    }
+
+    const modoCalculo = modo_calculo || MODO_CALCULO_POR_PLAZO;
+    if (!MODOS_CALCULO_VALIDOS.has(modoCalculo)) {
+      return res.status(400).json({ error: 'Modo de calculo invalido' });
     }
 
     await conn.beginTransaction();
@@ -253,11 +383,8 @@ exports.crearContrato = async (req, res) => {
     }
 
     const montoFinanciadoNum = round2(monto_financiado);
-    const plazoMesesNum = Number(plazo_meses || 0);
-    if (!Number.isInteger(plazoMesesNum) || plazoMesesNum <= 0) {
-      await conn.rollback();
-      return res.status(400).json({ error: 'Plazo de meses invalido' });
-    }
+    const plazoMesesInput = Number(plazo_meses || 0);
+    const cuotaIngresadaNum = round2(cuota || 0);
 
     const tasaAnualContrato = tipo_financiamiento === 'interes_saldo'
       ? round2(tasa_interes_anual ?? 16)
@@ -269,18 +396,73 @@ exports.crearContrato = async (req, res) => {
       ? 0
       : Number(dias_gracia || 0);
 
-    const cuotaCalculada = calcularCuotaPMT(
-      montoFinanciadoNum,
-      plazoMesesNum,
-      tasaAnualContrato || 0,
-      tipo_financiamiento
-    );
-    if (montoFinanciadoNum > 0 && cuotaCalculada <= 0) {
-      await conn.rollback();
-      return res.status(400).json({ error: 'No se pudo calcular la cuota' });
+    let plazoMesesFinal = plazoMesesInput;
+    let cuotaContrato = 0;
+    let planCuotas = [];
+
+    if (modoCalculo === MODO_CALCULO_POR_PLAZO) {
+      if (!Number.isInteger(plazoMesesFinal) || plazoMesesFinal <= 0) {
+        await conn.rollback();
+        return res.status(400).json({ error: 'Plazo de meses invalido' });
+      }
+
+      cuotaContrato = calcularCuotaPMT(
+        montoFinanciadoNum,
+        plazoMesesFinal,
+        tasaAnualContrato || 0,
+        tipo_financiamiento
+      );
+
+      if (montoFinanciadoNum > 0 && cuotaContrato <= 0) {
+        await conn.rollback();
+        return res.status(400).json({ error: 'No se pudo calcular la cuota' });
+      }
+
+      if (montoFinanciadoNum > 0) {
+        planCuotas = generarPlanCapital({
+          montoFinanciado: montoFinanciadoNum,
+          plazoMeses: plazoMesesFinal,
+          cuotaMensual: cuotaContrato,
+          tipoFinanciamiento: tipo_financiamiento,
+          tasaInteresAnual: tasaAnualContrato || 0
+        });
+      }
+    } else {
+      if (montoFinanciadoNum > 0 && cuotaIngresadaNum <= 0) {
+        await conn.rollback();
+        return res.status(400).json({ error: 'Cuota invalida para modo por cuota' });
+      }
+
+      if (montoFinanciadoNum > 0) {
+        const resultadoPlan = generarPlanDesdeCuota({
+          montoFinanciado: montoFinanciadoNum,
+          cuotaBase: cuotaIngresadaNum,
+          tipoFinanciamiento: tipo_financiamiento,
+          tasaInteresAnual: tasaAnualContrato || 0
+        });
+
+        if (!resultadoPlan.ok) {
+          await conn.rollback();
+          return res.status(400).json({ error: resultadoPlan.error });
+        }
+
+        plazoMesesFinal = Number(resultadoPlan.plazoMeses || 0);
+        cuotaContrato = round2(resultadoPlan.cuotaContrato || 0);
+        planCuotas = Array.isArray(resultadoPlan.plan) ? resultadoPlan.plan : [];
+      } else {
+        if (!Number.isInteger(plazoMesesFinal) || plazoMesesFinal <= 0) {
+          plazoMesesFinal = 1;
+        }
+        cuotaContrato = cuotaIngresadaNum > 0 ? cuotaIngresadaNum : 0;
+      }
     }
 
-    const fechaVencimiento = sumarMesesISO(fecha_inicio, plazoMesesNum);
+    if (!Number.isInteger(plazoMesesFinal) || plazoMesesFinal <= 0) {
+      await conn.rollback();
+      return res.status(400).json({ error: 'Plazo de meses invalido' });
+    }
+
+    const fechaVencimiento = sumarMesesISO(fecha_inicio, plazoMesesFinal);
 
     // ===============================
     // DEFINIR ESTADOS SEGÚN TIPO DE PAGO
@@ -322,8 +504,8 @@ exports.crearContrato = async (req, res) => {
       precio_total,
       prima,
       montoFinanciadoNum,
-      plazoMesesNum,
-      cuotaCalculada,
+      plazoMesesFinal,
+      cuotaContrato,
       fecha_inicio,
       fechaVencimiento,
       estadoContrato,
@@ -348,17 +530,16 @@ exports.crearContrato = async (req, res) => {
     // GENERAR CUOTAS SOLO SI HAY FINANCIAMIENTO
     // ===============================
     if (montoFinanciadoNum > 0) {
-      const plan = generarPlanCapital({
-        montoFinanciado: montoFinanciadoNum,
-        plazoMeses: plazoMesesNum,
-        cuotaMensual: cuotaCalculada,
-        tipoFinanciamiento: tipo_financiamiento,
-        tasaInteresAnual: tasaAnualContrato || 0
-      });
+      if (!Array.isArray(planCuotas) || planCuotas.length !== plazoMesesFinal) {
+        await conn.rollback();
+        return res.status(400).json({ error: 'No se pudo generar el plan de cuotas' });
+      }
 
-      for (let i = 1; i <= plazoMesesNum; i += 1) {
+      for (let i = 1; i <= plazoMesesFinal; i += 1) {
         const fechaFormateada = sumarMesesISO(fecha_inicio, i);
-        const tramo = plan[i - 1];
+        const tramo = planCuotas[i - 1];
+        const montoCuotaTramo = round2(tramo?.monto_cuota || cuotaContrato);
+        const capitalProgramado = round2(tramo?.capital_programado || 0);
         await conn.query(`
           INSERT INTO cuotas (
             id_contrato,
@@ -372,8 +553,8 @@ exports.crearContrato = async (req, res) => {
           id_contrato,
           i,
           fechaFormateada,
-          cuotaCalculada,
-          round2(tramo?.capital_programado || 0)
+          montoCuotaTramo,
+          capitalProgramado
         ]);
       }
     }
@@ -382,7 +563,9 @@ exports.crearContrato = async (req, res) => {
 
     res.json({
       ok: true,
-      cuota_calculada: cuotaCalculada
+      modo_calculo: modoCalculo,
+      plazo_meses: plazoMesesFinal,
+      cuota_calculada: cuotaContrato
     });
 
   } catch (error) {
